@@ -79,8 +79,8 @@ public class BlockingJobsMonitor {
             executors.addAll(computer.getOneOffExecutors());
 
             for (Executor executor : executors) {
-                if(executor.isBusy()) {
-                    Queue.Executable currentExecutable = executor.getCurrentExecutable();
+                Queue.Executable currentExecutable = executor.getCurrentExecutable();
+                if(currentExecutable!=null) {
 
                     SubTask subTask = currentExecutable.getParent();
                     Queue.Task task = subTask.getOwnerTask();
