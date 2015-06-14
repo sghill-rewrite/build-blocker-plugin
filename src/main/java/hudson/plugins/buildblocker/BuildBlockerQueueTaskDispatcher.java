@@ -27,10 +27,13 @@ package hudson.plugins.buildblocker;
 import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.AbstractProject;
+import hudson.model.Node;
 import hudson.model.Queue;
 import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.model.queue.SubTask;
+
+import java.util.logging.Logger;
 
 /**
  * Queue task dispatcher that evaluates the given blocking jobs in the config of the
@@ -38,6 +41,8 @@ import hudson.model.queue.SubTask;
  */
 @Extension
 public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
+
+    private static final Logger LOG = Logger.getLogger(BuildBlockerQueueTaskDispatcher.class.getName());
 
     /**
      * Called whenever {@link hudson.model.Queue} is considering if {@link hudson.model.Queue.Item} is ready to execute immediately
@@ -62,33 +67,71 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
      * to be re-evaluated earlier, call {@link hudson.model.Queue#scheduleMaintenance()} to initiate that process.
      *
      * @return null to indicate that the item is ready to proceed to the buildable state as far as this
-     *         {@link hudson.model.queue.QueueTaskDispatcher} is concerned. Otherwise return an object that indicates why
-     *         the build is blocked.
+     * {@link hudson.model.queue.QueueTaskDispatcher} is concerned. Otherwise return an object that indicates why
+     * the build is blocked.
      * @since 1.427
      */
     @Override
     @SuppressWarnings("unchecked")
     public CauseOfBlockage canRun(Queue.Item item) {
-        if(item.task instanceof AbstractProject) {
-            AbstractProject project = (AbstractProject) item.task;
+        LOG.fine("hello there");
+        if (item.task instanceof AbstractProject) {
+            BuildBlockerProperty property = getBuildBlockerProperty(item);
 
-            BuildBlockerProperty property = (BuildBlockerProperty) project.getProperty(BuildBlockerProperty.class);
-
-            if(property != null) {
-                String blockingJobs = property.getBlockingJobs();
-
-                SubTask subTask = new BlockingJobsMonitor(blockingJobs).getBlockingJob(item);
-
-                if(subTask != null) {
-                    if(subTask instanceof MatrixConfiguration) {
-                        subTask = ((MatrixConfiguration) subTask).getParent();
-                    }
-
-                    return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), subTask.getDisplayName()));
+            if (property != null && property.isBlockOnGlobalLevel()) {
+                LOG.fine("blockOnGlobalLevel is enabled => calling checkForBlock");
+                CauseOfBlockage subTask = checkForBlock(item, property.getBlockingJobs());
+                if (subTask != null) {
+                    return subTask;
                 }
             }
         }
 
         return super.canRun(item);
+    }
+
+    @Override
+    public CauseOfBlockage canTake(Node node, Queue.BuildableItem item) {
+        LOG.fine("hello there");
+        BuildBlockerProperty property = getBuildBlockerProperty(item);
+        if (property != null && property.isBlockOnNodeLevel()) {
+            LOG.fine("blockOnNodeLevel is enabled => calling checkForBlock");
+            checkForBlock(item, property.getBlockingJobs());
+        }
+        return super.canTake(node, item);
+    }
+
+    private CauseOfBlockage checkForBlock(Queue.Item item, String blockingJobs) {
+        if (blockingJobs == null) {
+            return null;
+        }
+        BlockingJobsMonitor jobsMonitor = new BlockingJobsMonitor(blockingJobs);
+        SubTask subTask = jobsMonitor.checkAllNodesForRunningBuilds();
+
+        if (subTask != null) {
+            if (subTask instanceof MatrixConfiguration) {
+                subTask = ((MatrixConfiguration) subTask).getParent();
+            }
+
+            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), subTask.getDisplayName()));
+        }
+
+        subTask = jobsMonitor.checkForBuildableQueueEntries(item);
+        if (subTask != null) {
+            if (subTask instanceof MatrixConfiguration) {
+                subTask = ((MatrixConfiguration) subTask).getParent();
+            }
+
+            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), subTask.getDisplayName()));
+        }
+
+        return null;
+    }
+
+
+    private BuildBlockerProperty getBuildBlockerProperty(Queue.Item item) {
+        AbstractProject project = (AbstractProject) item.task;
+
+        return (BuildBlockerProperty) project.getProperty(BuildBlockerProperty.class);
     }
 }

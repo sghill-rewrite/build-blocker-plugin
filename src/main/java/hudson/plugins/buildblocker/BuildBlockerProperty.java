@@ -28,18 +28,19 @@ import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
+import hudson.util.FormValidation;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.StaplerRequest;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
-import hudson.util.FormValidation;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import org.kohsuke.stapler.StaplerRequest;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.StringUtils;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Job property that stores the line feed separated list of
@@ -66,6 +67,10 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
      */
     private boolean useBuildBlocker;
 
+    private boolean blockOnNodeLevel;
+    private boolean blockOnGlobalLevel;
+    private boolean scanAllQueueItemStates;
+
     /**
      * the job names that block the build if running
      */
@@ -73,6 +78,7 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
     /**
      * Returns true if the build blocker is enabled.
+     *
      * @return true if the build blocker is enabled
      */
     @SuppressWarnings("unused")
@@ -82,14 +88,18 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
     /**
      * Sets the build blocker flag.
+     *
      * @param useBuildBlocker the build blocker flag
      */
     public void setUseBuildBlocker(boolean useBuildBlocker) {
+        LOG.fine("use build blocker: " + useBuildBlocker);
         this.useBuildBlocker = useBuildBlocker;
     }
 
+
     /**
      * Returns the text of the blocking jobs field.
+     *
      * @return the text of the blocking jobs field
      */
     public String getBlockingJobs() {
@@ -98,10 +108,39 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
     /**
      * Sets the blocking jobs field
+     *
      * @param blockingJobs the blocking jobs entry
      */
     public void setBlockingJobs(String blockingJobs) {
+        LOG.fine("blocking jobs: " + blockingJobs);
         this.blockingJobs = blockingJobs;
+    }
+
+    public boolean isBlockOnNodeLevel() {
+        return blockOnNodeLevel;
+    }
+
+    public void setBlockOnNodeLevel(boolean blockOnNodeLevel) {
+        LOG.fine("block on node level: " + blockOnNodeLevel);
+        this.blockOnNodeLevel = blockOnNodeLevel;
+    }
+
+    public boolean isBlockOnGlobalLevel() {
+        return blockOnGlobalLevel;
+    }
+
+    public void setBlockOnGlobalLevel(boolean blockOnGlobalLevel) {
+        LOG.fine("block on global level: " + blockOnGlobalLevel);
+        this.blockOnGlobalLevel = blockOnGlobalLevel;
+    }
+
+    public boolean isScanAllQueueItemStates() {
+        return scanAllQueueItemStates;
+    }
+
+    public void setScanAllQueueItemStates(boolean scanAllQueueItemStates) {
+        LOG.fine("scan all queue item states: " + scanAllQueueItemStates);
+        this.scanAllQueueItemStates = scanAllQueueItemStates;
     }
 
     /**
@@ -120,6 +159,7 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
         /**
          * Returns the name to be shown on the website
+         *
          * @return the name to be shown on the website.
          */
         @Override
@@ -130,8 +170,9 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         /**
          * Returns a new instance of the build blocker property
          * when job config page is saved.
-         * @param req stapler request
-         * @param formData  the form data
+         *
+         * @param req      stapler request
+         * @param formData the form data
          * @return a new instance of the build blocker property
          * @throws FormException
          */
@@ -139,12 +180,12 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         public BuildBlockerProperty newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             BuildBlockerProperty buildBlockerProperty = new BuildBlockerProperty();
 
-            if(formData.containsKey(USE_BUILD_BLOCKER)) {
+            if (formData.containsKey(USE_BUILD_BLOCKER)) {
                 try {
                     buildBlockerProperty.setUseBuildBlocker(true);
                     buildBlockerProperty.setBlockingJobs(formData.getJSONObject(USE_BUILD_BLOCKER).getString(BLOCKING_JOBS_KEY));
 
-                } catch(JSONException e) {
+                } catch (JSONException e) {
                     buildBlockerProperty.setUseBuildBlocker(false);
                     LOG.log(Level.WARNING, "could not get blocking jobs from " + formData.toString());
                 }
@@ -154,31 +195,32 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         }
 
         /**
-        * Chcek the regular expression entered by the user
-        */
+         * Chcek the regular expression entered by the user
+         */
         public FormValidation doCheckRegex(@QueryParameter final String blockingJobs) {
             List<String> listJobs = null;
-            if(StringUtils.isNotBlank(blockingJobs)) {
-              listJobs = Arrays.asList(blockingJobs.split("\n"));
+            if (StringUtils.isNotBlank(blockingJobs)) {
+                listJobs = Arrays.asList(blockingJobs.split("\n"));
             }
-            if (listJobs!=null) {
-              for (String blockingJob : listJobs) {
-                try {
-                    Pattern.compile(blockingJob);
-                } catch (PatternSyntaxException pse) {
-                    return FormValidation.error("Invalid regular expression [" +
-                                                blockingJob + "] exception: " +
-                                                pse.getDescription());
+            if (listJobs != null) {
+                for (String blockingJob : listJobs) {
+                    try {
+                        Pattern.compile(blockingJob);
+                    } catch (PatternSyntaxException pse) {
+                        return FormValidation.error("Invalid regular expression [" +
+                                blockingJob + "] exception: " +
+                                pse.getDescription());
+                    }
                 }
-              }
-              return FormValidation.ok();
-            }else{
-              return FormValidation.ok();
+                return FormValidation.ok();
+            } else {
+                return FormValidation.ok();
             }
         }
 
         /**
-         * Returns always true a it can be used in all types of jobs.
+         * Returns always true as it can be used in all types of jobs.
+         *
          * @param jobType the job type to be checked if this property is applicable.
          * @return true
          */

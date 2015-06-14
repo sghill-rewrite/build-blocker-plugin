@@ -24,6 +24,7 @@
 
 package hudson.plugins.buildblocker;
 
+import com.google.common.base.Predicate;
 import hudson.model.*;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.CauseOfBlockage;
@@ -37,6 +38,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.Future;
 
+import static hudson.model.Hudson.getInstance;
+import static org.junit.Assert.assertThat;
+
 /**
  * Unit tests
  */
@@ -44,6 +48,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
     /**
      * One test for all for faster execution.
+     *
      * @throws Exception
      */
     public void testCanRun() throws Exception {
@@ -54,8 +59,8 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         DumbSlave slave = this.createSlave(slaveLabel);
         SlaveComputer c = slave.getComputer();
         c.connect(false).get(); // wait until it's connected
-        if(c.isOffline()) {
-            fail("Slave failed to go online: "+c.getLog());
+        if (c.isOffline()) {
+            fail("Slave failed to go online: " + c.getLog());
         }
 
         BuildBlockerQueueTaskDispatcher dispatcher = new BuildBlockerQueueTaskDispatcher();
@@ -80,6 +85,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         BuildBlockerProperty property = new BuildBlockerProperty();
 
         property.setBlockingJobs(".*ocki.*");
+        property.setBlockOnGlobalLevel(true);
 
         project.addProperty(property);
 
@@ -88,7 +94,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
         assertTrue(causeOfBlockage.getShortDescription().contains(" by " + blockingJobName + "."));
 
-        while(!(future1.isDone() && future2.isDone() && future3.isDone())) {
+        while (!(future1.isDone() && future2.isDone() && future3.isDone())) {
             // wait until jobs are done.
         }
     }
@@ -96,37 +102,37 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
     public void testMultipleExecutors() throws Exception {
 
         // Job1 runs for 1 second, no dependencies
-        FreeStyleProject theJob1 = createFreeStyleProject( "MultipleExecutor_Job1" );
-        theJob1.getBuildersList().add( new Shell("sleep 1; exit 0") );
-        assertTrue( theJob1.getBuilds().isEmpty() );
+        FreeStyleProject theJob1 = createFreeStyleProject("MultipleExecutor_Job1");
+        theJob1.getBuildersList().add(new Shell("sleep 1; exit 0"));
+        assertTrue(theJob1.getBuilds().isEmpty());
 
         // Job2 returns immediatly but can't run while Job1 is running.
-        FreeStyleProject theJob2 = createFreeStyleProject( "MultipleExecutor_Job2" );
+        FreeStyleProject theJob2 = createFreeStyleProject("MultipleExecutor_Job2");
         {
             BuildBlockerProperty theProperty = new BuildBlockerProperty();
-            theProperty.setBlockingJobs( "MultipleExecutor_Job1" );
-            theJob2.addProperty( theProperty );
+            theProperty.setBlockingJobs("MultipleExecutor_Job1");
+            theProperty.setBlockOnGlobalLevel(true);
+            theJob2.addProperty(theProperty);
         }
-        assertTrue( theJob1.getBuilds().isEmpty() );
+        assertTrue(theJob1.getBuilds().isEmpty());
 
         // allow executing two simultanious jobs
-        int theOldNumExecutors = Hudson.getInstance().getNumExecutors();
-        Hudson.getInstance().setNumExecutors( 2 );
+        int theOldNumExecutors = getInstance().getNumExecutors();
+        getInstance().setNumExecutors(2);
 
-        Future<FreeStyleBuild> theFuture1 = theJob1.scheduleBuild2( 0 );
-        Future<FreeStyleBuild> theFuture2 = theJob2.scheduleBuild2( 0 );
-        while ( !theFuture1.isDone() || !theFuture2.isDone() )
-        {
+        Future<FreeStyleBuild> theFuture1 = theJob1.scheduleBuild2(0);
+        Future<FreeStyleBuild> theFuture2 = theJob2.scheduleBuild2(0);
+        while (!theFuture1.isDone() || !theFuture2.isDone()) {
             // let the jobs process
         }
 
         // check if job2 was not started before job1 was finished
         Run theRun1 = theJob1.getLastBuild();
         Run theRun2 = theJob2.getLastBuild();
-        assertTrue( theRun1.getTimeInMillis() + theRun1.getDuration() <= theRun2.getTimeInMillis() );
+        assertTrue(theRun1.getTimeInMillis() + theRun1.getDuration() <= theRun2.getTimeInMillis());
 
         // restore changed settings
-        Hudson.getInstance().setNumExecutors( theOldNumExecutors );
+        getInstance().setNumExecutors(theOldNumExecutors);
         theJob2.delete();
         theJob1.delete();
     }
@@ -134,45 +140,79 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
     public void testSelfExcludingJobs() throws Exception {
 
         BuildBlockerProperty theProperty = new BuildBlockerProperty();
-        theProperty.setBlockingJobs( "SelfExcluding_.*" );
+        theProperty.setBlockingJobs("SelfExcluding_.*");
+        theProperty.setBlockOnGlobalLevel(true);
 
-        FreeStyleProject theJob1 = createFreeStyleProject( "SelfExcluding_Job1" );
-        theJob1.addProperty( theProperty );
-        assertTrue( theJob1.getBuilds().isEmpty() );
+        FreeStyleProject theJob1 = createFreeStyleProject("SelfExcluding_Job1");
+        theJob1.addProperty(theProperty);
+        assertTrue(theJob1.getBuilds().isEmpty());
 
-        FreeStyleProject theJob2 = createFreeStyleProject( "SelfExcluding_Job2" );
-        theJob2.addProperty( theProperty );
-        assertTrue( theJob1.getBuilds().isEmpty() );
+        FreeStyleProject theJob2 = createFreeStyleProject("SelfExcluding_Job2");
+        theJob2.addProperty(theProperty);
+        assertTrue(theJob1.getBuilds().isEmpty());
 
         // allow executing two simultanious jobs
-        int theOldNumExecutors = Hudson.getInstance().getNumExecutors();
-        Hudson.getInstance().setNumExecutors( 2 );
+        int theOldNumExecutors = getInstance().getNumExecutors();
+        getInstance().setNumExecutors(2);
 
-        Future<FreeStyleBuild> theFuture1 = theJob1.scheduleBuild2( 0 );
-        Future<FreeStyleBuild> theFuture2 = theJob2.scheduleBuild2( 0 );
+        Future<FreeStyleBuild> theFuture1 = theJob1.scheduleBuild2(0);
+        Future<FreeStyleBuild> theFuture2 = theJob2.scheduleBuild2(0);
 
         long theStartTime = System.currentTimeMillis();
         long theEndTime = theStartTime;
-        while ( ( !theFuture1.isDone() || !theFuture2.isDone() )
-        		&& theEndTime < theStartTime + 5000 )
-        {
-        	theEndTime = System.currentTimeMillis();
+        while ((!theFuture1.isDone() || !theFuture2.isDone())
+                && theEndTime < theStartTime + 5000) {
+//            assertThat(
+//                    of(
+//                            getInstance()
+//                                    .getComputers())
+//                            .transformAndConcat(extractExecutors())
+//                            .filter(filterBusyExecutors())
+//                            .toList()
+//                    , hasSize(1));
+            int countBusy = 0;
+            for (Computer computor : Hudson.getInstance().getComputers()) {
+                for (Executor executor : computor.getExecutors()) {
+                    if (executor.isBusy()) {
+                        countBusy++;
+                    }
+                }
+            }
+            assertThat(countBusy, org.hamcrest.Matchers.lessThanOrEqualTo(1));
+            theEndTime = System.currentTimeMillis();
         }
 
         // if more then five seconds have passed, we assume its a deadlock.
-        assertTrue( theEndTime < theStartTime + 5000 );
+        assertTrue(theEndTime < theStartTime + 5000);
 
         // restore changed settings
-        Hudson.getInstance().setNumExecutors( theOldNumExecutors );
+        getInstance().setNumExecutors(theOldNumExecutors);
         theJob2.delete();
         theJob1.delete();
     }
 
+    private Predicate<Executor> filterBusyExecutors() {
+        return new Predicate<Executor>() {
+            public boolean apply(Executor input) {
+                return input.isBusy();
+            }
+        };
+    }
+
+//    private Function<Computer, Iterable<Executor>> extractExecutors() {
+//        return new Function<Computer, Iterable<Executor>>() {
+//            public Iterable<Executor> apply(Computer input) {
+//                return from(input.getExecutors());
+//            }
+//        };
+//    }
+
     /**
      * Returns the future object for a newly created project.
+     *
      * @param blockingJobName the name for the project
-     * @param shell the shell command task to add
-     * @param label the label to bind to master or slave
+     * @param shell           the shell command task to add
+     * @param label           the label to bind to master or slave
      * @return the future object for a newly created project
      * @throws IOException
      */
@@ -183,7 +223,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         blockingProject.getBuildersList().add(shell);
         Future<FreeStyleBuild> future = blockingProject.scheduleBuild2(0);
 
-        while(! blockingProject.isBuilding()) {
+        while (!blockingProject.isBuilding()) {
             // wait until job is started
         }
 

@@ -22,16 +22,28 @@
   THE SOFTWARE.
 -->
 
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:optionalBlock name="useBuildBlocker" title="${%Block build if certain jobs are running}" checked="${instance.useBuildBlocker}" help="/plugin/build-blocker-plugin/help-useBuildBlocker.html">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:optionalBlock name="useBuildBlocker" title="${%Block build if certain jobs are running}"
+                     checked="${instance.useBuildBlocker}"
+                     help="/plugin/build-blocker-plugin/help-useBuildBlocker.html">
         <f:entry title="${%Blocking jobs}" field="blockingJobs">
-            <f:textarea />
+            <f:textarea/>
+        </f:entry>
+        <f:entry title="" field="blockOnGlobalLevel">
+            <f:checkbox name="useBuildBlockerGlobally" title="enforce block on a global level"/>
+        </f:entry>
+        <f:entry field="blockOnNodeLevel">
+            <f:checkbox name="useBuildBlockerPerNode" title="enforce block on a per node level"/>
+        </f:entry>
+        <f:entry field="scanAllQueueItemStates">
+            <f:checkbox name="scanAllQueueItemStates"
+                        title="consider all states of jobs for blocking decision (includes jobs that are sleeping or blocked or..."/>
         </f:entry>
         <f:entry title="">
-        <div align="right">
-        <f:validateButton title="Validate Regex" progress="Checking..."
-           method="checkRegex" with="blockingJobs" />
-         </div>
-         </f:entry>
+            <div align="right">
+                <f:validateButton title="Validate Regex" progress="Checking..."
+                                  method="checkRegex" with="blockingJobs"/>
+            </div>
+        </f:entry>
     </f:optionalBlock>
 </j:jelly>

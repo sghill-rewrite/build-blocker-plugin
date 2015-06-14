@@ -41,11 +41,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class BlockingJobsMonitorTest extends HudsonTestCase {
 
-    /**
-     * One test for all for faster execution
-     * @throws Exception
-     */
-    public void testConstructor() throws Exception {
+    private String blockingJobName;
+    private Future<FreeStyleBuild> future;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        blockingJobName = "blockingJob";
+
+
         // clear queue from preceding tests
         Jenkins.getInstance().getQueue().clear();
 
@@ -54,11 +58,10 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
         DumbSlave slave = this.createSlave(label);
         SlaveComputer c = slave.getComputer();
         c.connect(false).get(); // wait until it's connected
-        if(c.isOffline()) {
-            fail("Slave failed to go online: "+c.getLog());
+        if (c.isOffline()) {
+            fail("Slave failed to go online: " + c.getLog());
         }
 
-        String blockingJobName = "blockingJob";
 
         FreeStyleProject blockingProject = this.createFreeStyleProject(blockingJobName);
         blockingProject.setAssignedLabel(label);
@@ -66,36 +69,69 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
         Shell shell = new Shell("sleep 1");
         blockingProject.getBuildersList().add(shell);
 
-        Future<FreeStyleBuild> future = blockingProject.scheduleBuild2(0);
+        future = blockingProject.scheduleBuild2(0);
 
         // wait until blocking job started
-        while(! slave.getComputer().getExecutors().get(0).isBusy()) {
+        while (!slave.getComputer().getExecutors().get(0).isBusy()) {
             TimeUnit.SECONDS.sleep(1);
         }
+
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        // wait until blocking job stopped
+        while (!future.isDone()) {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        BlockingJobsMonitor blockingJobsMonitorUsingFullName = new BlockingJobsMonitor(blockingJobName);
+
+        assertNull(blockingJobsMonitorUsingFullName.checkAllNodesForRunningBuilds());
+        assertNull(blockingJobsMonitorUsingFullName.checkForBuildableQueueEntries(null));
+
+
+        super.tearDown();
+    }
+
+    public void testConstructor() throws Exception {
+
 
         BlockingJobsMonitor blockingJobsMonitorUsingNull = new BlockingJobsMonitor(null);
-        assertNull(blockingJobsMonitorUsingNull.getBlockingJob(null));
+        assertNull(blockingJobsMonitorUsingNull.checkAllNodesForRunningBuilds());
+        assertNull(blockingJobsMonitorUsingNull.checkForBuildableQueueEntries(null));
 
+    }
+
+    public void test2() {
         BlockingJobsMonitor blockingJobsMonitorNotMatching = new BlockingJobsMonitor("xxx");
-        assertNull(blockingJobsMonitorNotMatching.getBlockingJob(null));
+        assertNull(blockingJobsMonitorNotMatching.checkAllNodesForRunningBuilds());
+        assertNull(blockingJobsMonitorNotMatching.checkForBuildableQueueEntries(null));
 
+    }
+
+    public void test3() {
         BlockingJobsMonitor blockingJobsMonitorUsingFullName = new BlockingJobsMonitor(blockingJobName);
-        assertEquals(blockingJobName, blockingJobsMonitorUsingFullName.getBlockingJob(null).getDisplayName());
+        assertEquals(blockingJobName, blockingJobsMonitorUsingFullName.checkAllNodesForRunningBuilds().getDisplayName());
+        assertNull(blockingJobsMonitorUsingFullName.checkForBuildableQueueEntries(null));
 
+    }
+
+    public void test4() {
         BlockingJobsMonitor blockingJobsMonitorUsingRegex = new BlockingJobsMonitor("block.*");
-        assertEquals(blockingJobName, blockingJobsMonitorUsingRegex.getBlockingJob(null).getDisplayName());
+        assertEquals(blockingJobName, blockingJobsMonitorUsingRegex.checkAllNodesForRunningBuilds().getDisplayName());
+        assertNull(blockingJobsMonitorUsingRegex.checkForBuildableQueueEntries(null));
+    }
 
+    public void test5() {
         BlockingJobsMonitor blockingJobsMonitorUsingMoreLines = new BlockingJobsMonitor("xxx\nblock.*\nyyy");
-        assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLines.getBlockingJob(null).getDisplayName());
+        assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLines.checkAllNodesForRunningBuilds().getDisplayName());
+        assertNull(blockingJobsMonitorUsingMoreLines.checkForBuildableQueueEntries(null));
 
+    }
+
+    public void test6() {
         BlockingJobsMonitor blockingJobsMonitorUsingWrongRegex = new BlockingJobsMonitor("*BW2S.*QRT.");
-        assertNull(blockingJobsMonitorUsingWrongRegex.getBlockingJob(null));
-
-        // wait until blocking job stopped
-        while (! future.isDone()) {
-            TimeUnit.SECONDS.sleep(1);
-        }
-
-        assertNull(blockingJobsMonitorUsingFullName.getBlockingJob(null));
+        assertNull(blockingJobsMonitorUsingWrongRegex.checkAllNodesForRunningBuilds());
+        assertNull(blockingJobsMonitorUsingWrongRegex.checkForBuildableQueueEntries(null));
     }
 }
