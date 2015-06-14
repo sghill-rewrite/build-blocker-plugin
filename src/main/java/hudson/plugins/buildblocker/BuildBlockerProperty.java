@@ -29,15 +29,12 @@ import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.FormValidation;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -143,19 +140,26 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         this.scanAllQueueItemStates = scanAllQueueItemStates;
     }
 
+
+    @DataBoundConstructor
+    public BuildBlockerProperty(boolean useBuildBlocker, boolean blockOnNodeLevel, boolean blockOnGlobalLevel, boolean scanAllQueueItemStates, String blockingJobs) {
+        LOG.fine("useBuildBlocker: " + useBuildBlocker + " blockOnNodeLevel: " + blockOnNodeLevel + " blockonglobal: " + blockOnGlobalLevel + " scanallqueue: " + scanAllQueueItemStates + " blockingjobs: " + blockingJobs);
+        this.useBuildBlocker = useBuildBlocker;
+        this.blockOnNodeLevel = blockOnNodeLevel;
+        this.blockOnGlobalLevel = blockOnGlobalLevel;
+        this.scanAllQueueItemStates = scanAllQueueItemStates;
+        this.blockingJobs = blockingJobs;
+    }
+
+    public BuildBlockerProperty() {
+    }
+
     /**
      * Descriptor
      */
     @SuppressWarnings("unused")
     @Extension
     public static final class BuildBlockerDescriptor extends JobPropertyDescriptor {
-
-        /**
-         * Constructor loading the data from the config file
-         */
-        public BuildBlockerDescriptor() {
-            load();
-        }
 
         /**
          * Returns the name to be shown on the website
@@ -167,32 +171,6 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
             return Messages.DisplayName();
         }
 
-        /**
-         * Returns a new instance of the build blocker property
-         * when job config page is saved.
-         *
-         * @param req      stapler request
-         * @param formData the form data
-         * @return a new instance of the build blocker property
-         * @throws FormException
-         */
-        @Override
-        public BuildBlockerProperty newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            BuildBlockerProperty buildBlockerProperty = new BuildBlockerProperty();
-
-            if (formData.containsKey(USE_BUILD_BLOCKER)) {
-                try {
-                    buildBlockerProperty.setUseBuildBlocker(true);
-                    buildBlockerProperty.setBlockingJobs(formData.getJSONObject(USE_BUILD_BLOCKER).getString(BLOCKING_JOBS_KEY));
-
-                } catch (JSONException e) {
-                    buildBlockerProperty.setUseBuildBlocker(false);
-                    LOG.log(Level.WARNING, "could not get blocking jobs from " + formData.toString());
-                }
-            }
-
-            return buildBlockerProperty;
-        }
 
         /**
          * Chcek the regular expression entered by the user

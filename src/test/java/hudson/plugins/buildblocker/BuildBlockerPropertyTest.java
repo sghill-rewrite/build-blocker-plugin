@@ -27,6 +27,7 @@ package hudson.plugins.buildblocker;
 import hudson.model.Job;
 import net.sf.json.JSONObject;
 import org.easymock.EasyMock;
+import org.junit.Ignore;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -40,28 +41,7 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
 
     /**
      * Simple property test
-     * @throws Exception
-     */
-    public void testUseBuildBlocker() throws Exception {
-        BuildBlockerProperty property = new BuildBlockerProperty();
-
-        property.setUseBuildBlocker(true);
-        assertTrue(property.isUseBuildBlocker());
-    }
-
-    /**
-     * Simple property test
-     * @throws Exception
-     */
-    public void testBlockingJobs() throws Exception {
-        BuildBlockerProperty property = new BuildBlockerProperty();
-
-        property.setBlockingJobs("blockingJobs");
-        assertEquals("blockingJobs", property.getBlockingJobs());
-    }
-
-    /**
-     * Simple property test
+     *
      * @throws Exception
      */
     public void testIsApplicable() throws Exception {
@@ -72,9 +52,11 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
 
     /**
      * Use different form data to test descriptor newInstance
+     *
      * @throws Exception
      */
-    public void testDescriptorNewInstance() throws Exception {
+    @Ignore("dont override newInstance...")
+    public void _testDescriptorNewInstance() throws Exception {
         JSONObject formData = new JSONObject();
         StaplerRequest staplerRequest = EasyMock.createNiceMock(StaplerRequest.class);
 
