@@ -25,10 +25,7 @@
 package hudson.plugins.buildblocker;
 
 import hudson.matrix.MatrixConfiguration;
-import hudson.model.AbstractProject;
-import hudson.model.Computer;
-import hudson.model.Executor;
-import hudson.model.Queue;
+import hudson.model.*;
 import hudson.model.queue.SubTask;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
@@ -54,6 +51,7 @@ public class BlockingJobsMonitor {
     private List<String> blockingJobs = emptyList();
 
     private static final Logger LOG = Logger.getLogger(BlockingJobsMonitor.class.getName());
+
 
     /**
      * Constructor using the job configuration entry for blocking jobs
@@ -84,6 +82,19 @@ public class BlockingJobsMonitor {
         return null;
     }
 
+    public SubTask checkNodeForBuildableQueueEntries(Queue.Item item, Node node) {
+        if (item == null || node == null) {
+            throw new IllegalArgumentException("item and node have to be defined but where " + item + " " + node);
+        }
+        List<Queue.BuildableItem> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node.toComputer());
+        SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
+        if (buildableItem != null) {
+            LOG.fine("build " + item + " blocked by queued build " + buildableItem);
+            return buildableItem;
+        }
+        return null;
+    }
+
     public SubTask checkAllNodesForRunningBuilds() {
         Computer[] computers = Jenkins.getInstance().getComputers();
 
@@ -103,13 +114,17 @@ public class BlockingJobsMonitor {
         return null;
     }
 
+    public SubTask checkNodeForRunningBuilds(Node node) {
+        return null;
+    }
+
     private SubTask checkForPlannedBuilds(Queue.Item item, List<Queue.BuildableItem> buildableItems) {
         for (Queue.BuildableItem buildableItem : buildableItems) {
             if (item != buildableItem) {
                 for (String blockingJob : this.blockingJobs) {
                     AbstractProject project = (AbstractProject) buildableItem.task;
                     if (project.getFullName().matches(blockingJob)) {
-                        return buildableItem.task;
+                        return project;
                     }
                 }
             }
@@ -142,4 +157,5 @@ public class BlockingJobsMonitor {
         }
         return null;
     }
+
 }

@@ -74,7 +74,6 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
     @Override
     @SuppressWarnings("unchecked")
     public CauseOfBlockage canRun(Queue.Item item) {
-        LOG.fine("hello there");
         if (item.task instanceof AbstractProject) {
             BuildBlockerProperty property = getBuildBlockerProperty(item);
 
@@ -92,7 +91,6 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
 
     @Override
     public CauseOfBlockage canTake(Node node, Queue.BuildableItem item) {
-        LOG.fine("hello there");
         BuildBlockerProperty property = getBuildBlockerProperty(item);
         if (property != null && property.isBlockOnNodeLevel()) {
             LOG.fine("blockOnNodeLevel is enabled => calling checkForBlock");
