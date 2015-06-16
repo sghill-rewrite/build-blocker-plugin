@@ -84,6 +84,7 @@ public class BlockingJobsMonitor {
 
     public SubTask checkNodeForBuildableQueueEntries(Queue.Item item, Node node) {
         if (item == null || node == null) {
+            //FIXME probably no good idea in jenkins, never gets caught
             throw new IllegalArgumentException("item and node have to be defined but where " + item + " " + node);
         }
         List<Queue.BuildableItem> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node.toComputer());
