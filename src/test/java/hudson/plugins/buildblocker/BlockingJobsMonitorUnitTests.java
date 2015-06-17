@@ -19,6 +19,7 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -61,11 +62,18 @@ public class BlockingJobsMonitorUnitTests {
         jenkins = mock(Jenkins.class);
         when(Jenkins.getInstance()).thenReturn(jenkins);
         when(jenkins.getQueue()).thenReturn(queue);
+
+        when(node.toComputer()).thenReturn(computer);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testCheckNodeForBuildableQueueEntriesNeedsNode() {
-        monitor.checkNodeForBuildableQueueEntries(null, null);
+        assertThat(monitor.checkNodeForBuildableQueueEntries(item, null), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckNodeForBuildableQueueEntriesNeedsItem() {
+        assertThat(monitor.checkNodeForBuildableQueueEntries(null, node), is(nullValue()));
     }
 
     @Test
@@ -77,9 +85,16 @@ public class BlockingJobsMonitorUnitTests {
 
     @Test
     public void testCheckNodeForBuildableQueueEntriesReturnsTaskThatIsQueued() {
-        when(queue.getBuildableItems(any(Computer.class))).thenReturn(asList(nonBlockingItem, item));
+        when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingItem, item));
 
         assertThat((Project) monitor.checkNodeForBuildableQueueEntries(mock(BuildableItem.class), node), is(equalTo(project)));
+    }
+
+    @Test
+    public void testCheckNodeForBuildableQueueEntriesReturnsNullForDifferentNode() {
+        when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingItem, item));
+
+        assertThat(monitor.checkNodeForBuildableQueueEntries(mock(BuildableItem.class), mock(Node.class)), is(nullValue()));
     }
 
 }
