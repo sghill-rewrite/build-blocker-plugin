@@ -99,23 +99,34 @@ public class BlockingJobsMonitor {
         Computer[] computers = Jenkins.getInstance().getComputers();
 
         for (Computer computer : computers) {
-            List<Executor> executors = computer.getExecutors();
+            SubTask task = checkComputerForRunningBuilds(computer);
+            if (task != null) {
+                return task;
+            }
+        }
+        return null;
+    }
 
-            executors.addAll(computer.getOneOffExecutors());
+    private SubTask checkComputerForRunningBuilds(Computer computer) {
+        List<Executor> executors = computer.getExecutors();
 
-            for (Executor executor : executors) {
-                SubTask task = checkForRunningBuilds(executor);
-                if (task != null) {
-                    LOG.fine("build blocked by running build " + task);
-                    return task;
-                }
+        executors.addAll(computer.getOneOffExecutors());
+
+        for (Executor executor : executors) {
+            SubTask task = checkForRunningBuilds(executor);
+            if (task != null) {
+                LOG.fine("build blocked by running build " + task);
+                return task;
             }
         }
         return null;
     }
 
     public SubTask checkNodeForRunningBuilds(Node node) {
-        return null;
+        if (node == null) {
+            return null;
+        }
+        return checkComputerForRunningBuilds(node.toComputer());
     }
 
     private SubTask checkForPlannedBuilds(Queue.Item item, List<Queue.BuildableItem> buildableItems) {

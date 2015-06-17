@@ -1,21 +1,21 @@
 package hudson.plugins.buildblocker;
 
-import hudson.model.Computer;
-import hudson.model.Node;
-import hudson.model.Project;
-import hudson.model.Queue;
+import hudson.model.*;
 import hudson.model.Queue.BuildableItem;
+import hudson.model.queue.SubTask;
 import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.Collections;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -35,6 +35,12 @@ public class BlockingJobsMonitorUnitTests {
     private Computer computer;
     @Mock
     private Queue queue;
+    @Mock
+    private Executor idleExecutor;
+    @Mock
+    private Executor executor;
+    @Mock
+    private OneOffExecutor idleOneOffExecutor;
 
     private Project project;
     private Project nonBlockingProject;
@@ -64,6 +70,11 @@ public class BlockingJobsMonitorUnitTests {
         when(jenkins.getQueue()).thenReturn(queue);
 
         when(node.toComputer()).thenReturn(computer);
+
+        when(idleExecutor.isBusy()).thenReturn(false);
+        when(executor.isBusy()).thenReturn(true);
+
+        when(idleOneOffExecutor.isBusy()).thenReturn(false);
     }
 
     @Test
@@ -96,5 +107,52 @@ public class BlockingJobsMonitorUnitTests {
 
         assertThat(monitor.checkNodeForBuildableQueueEntries(mock(BuildableItem.class), mock(Node.class)), is(nullValue()));
     }
+
+    @Test
+    public void testCheckNodeForRunningBuildNeedsNode() {
+        assertThat(monitor.checkNodeForRunningBuilds(null), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckNodeForRunningBuildReturnsNullForNonBusyExecutor() {
+        when(computer.getExecutors()).thenReturn(singletonList(idleExecutor));
+        when(computer.getOneOffExecutors()).thenReturn(Collections.<OneOffExecutor>emptyList());
+        assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckNodeForRunningBuildReturnsNullForNonBusyOneOffExecutor() {
+        when(computer.getExecutors()).thenReturn(Collections.<Executor>emptyList());
+        when(computer.getOneOffExecutors()).thenReturn(singletonList(idleOneOffExecutor));
+        assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckNodeForRunningBuildReturnsNullForDifferentRunningProject() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
+        Queue.Executable executable = Mockito.mock(Queue.Executable.class);
+        when(executor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
+
+        assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckNodeForRunningBuildReturnsBlockedProjectIfItIsRunning() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
+        Queue.Executable executable = Mockito.mock(Queue.Executable.class);
+        when(executor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        when(subTask.getOwnerTask()).thenReturn(project);
+
+        assertThat((Project) monitor.checkNodeForRunningBuilds(node), is(equalTo(project)));
+    }
+
+    //TODO cases for one off executor, matrix project
+
+    //TODO flag check all states implemented
 
 }
