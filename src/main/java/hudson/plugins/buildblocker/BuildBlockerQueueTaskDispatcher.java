@@ -104,6 +104,7 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
             return null;
         }
         BlockingJobsMonitor jobsMonitor = new BlockingJobsMonitor(blockingJobs);
+        //TODO depending on node / global, fork acordingly
         SubTask subTask = jobsMonitor.checkAllNodesForRunningBuilds();
 
         if (subTask != null) {
@@ -114,6 +115,7 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
             return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), subTask.getDisplayName()));
         }
 
+        //TODO depending on node / global, fork acordingly
         subTask = jobsMonitor.checkForBuildableQueueEntries(item);
         if (subTask != null) {
             if (subTask instanceof MatrixConfiguration) {

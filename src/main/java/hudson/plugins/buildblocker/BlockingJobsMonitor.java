@@ -30,10 +30,11 @@ import hudson.model.queue.SubTask;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 /**
@@ -60,19 +61,24 @@ public class BlockingJobsMonitor {
      */
     public BlockingJobsMonitor(String blockingJobs) {
         if (StringUtils.isNotBlank(blockingJobs)) {
-            this.blockingJobs = Arrays.asList(blockingJobs.split("\n"));
+            this.blockingJobs = asList(blockingJobs.split("\n"));
             LOG.fine("blocking jobs: " + blockingJobs);
         }
     }
 
     public SubTask checkForBuildableQueueEntries(Queue.Item item) {
-        /**
-         * check the list of items that have
-         * already been approved for building
-         * (but haven't actually started yet)
-         */
-        List<Queue.BuildableItem> buildableItems
-                = Jenkins.getInstance().getQueue().getBuildableItems();
+        List<Queue.BuildableItem> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems();
+
+        SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
+        if (buildableItem != null) {
+            LOG.fine("build " + item + " blocked by queued build " + buildableItem);
+            return buildableItem;
+        }
+        return null;
+    }
+
+    public SubTask checkForQueueEntries(Queue.Item item) {
+        List<Queue.Item> buildableItems = asList(Jenkins.getInstance().getQueue().getItems());
 
         SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
@@ -83,11 +89,25 @@ public class BlockingJobsMonitor {
     }
 
     public SubTask checkNodeForBuildableQueueEntries(Queue.Item item, Node node) {
-        if (item == null || node == null) {
-            return null;
-        }
-        List<Queue.BuildableItem> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node.toComputer());
+        List<? extends Queue.Item> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node.toComputer());
+
         SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
+        if (buildableItem != null) {
+            LOG.fine("build " + item + " blocked by queued build " + buildableItem);
+            return buildableItem;
+        }
+        return null;
+    }
+
+    public SubTask checkNodeForQueueEntries(Queue.Item item, Node node) {
+        List<Queue.Item> buildableItemsOnNode = new ArrayList<Queue.Item>();
+        for (Queue.Item buildableItem : Jenkins.getInstance().getQueue().getItems()) {
+            if (buildableItem.getAssignedLabel().contains(node)) {
+                buildableItemsOnNode.add(buildableItem);
+            }
+        }
+
+        SubTask buildableItem = checkForPlannedBuilds(item, buildableItemsOnNode);
         if (buildableItem != null) {
             LOG.fine("build " + item + " blocked by queued build " + buildableItem);
             return buildableItem;
@@ -129,8 +149,8 @@ public class BlockingJobsMonitor {
         return checkComputerForRunningBuilds(node.toComputer());
     }
 
-    private SubTask checkForPlannedBuilds(Queue.Item item, List<Queue.BuildableItem> buildableItems) {
-        for (Queue.BuildableItem buildableItem : buildableItems) {
+    private SubTask checkForPlannedBuilds(Queue.Item item, List<? extends Queue.Item> buildableItems) {
+        for (Queue.Item buildableItem : buildableItems) {
             if (item != buildableItem) {
                 for (String blockingJob : this.blockingJobs) {
                     AbstractProject project = (AbstractProject) buildableItem.task;
