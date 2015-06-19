@@ -39,6 +39,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import static java.util.logging.Level.FINE;
+
 /**
  * Job property that stores the line feed separated list of
  * regular expressions that define the blocking jobs.
@@ -89,7 +91,6 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
      * @param useBuildBlocker the build blocker flag
      */
     public void setUseBuildBlocker(boolean useBuildBlocker) {
-        LOG.fine("use build blocker: " + useBuildBlocker);
         this.useBuildBlocker = useBuildBlocker;
     }
 
@@ -109,7 +110,6 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
      * @param blockingJobs the blocking jobs entry
      */
     public void setBlockingJobs(String blockingJobs) {
-        LOG.fine("blocking jobs: " + blockingJobs);
         this.blockingJobs = blockingJobs;
     }
 
@@ -118,7 +118,6 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
     }
 
     public void setBlockOnNodeLevel(boolean blockOnNodeLevel) {
-        LOG.fine("block on node level: " + blockOnNodeLevel);
         this.blockOnNodeLevel = blockOnNodeLevel;
     }
 
@@ -127,7 +126,6 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
     }
 
     public void setBlockOnGlobalLevel(boolean blockOnGlobalLevel) {
-        LOG.fine("block on global level: " + blockOnGlobalLevel);
         this.blockOnGlobalLevel = blockOnGlobalLevel;
     }
 
@@ -136,7 +134,6 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
     }
 
     public void setScanAllQueueItemStates(boolean scanAllQueueItemStates) {
-        LOG.fine("scan all queue item states: " + scanAllQueueItemStates);
         this.scanAllQueueItemStates = scanAllQueueItemStates;
     }
 
@@ -144,8 +141,8 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
     @DataBoundConstructor
     public BuildBlockerProperty(boolean useBuildBlocker, boolean blockOnNodeLevel, boolean blockOnGlobalLevel,
                                 boolean scanAllQueueItemStates, String blockingJobs) {
-        LOG.fine("useBuildBlocker: " + useBuildBlocker + " blockOnNodeLevel: " + blockOnNodeLevel + " blockonglobal: " +
-                "" + blockOnGlobalLevel + " scanallqueue: " + scanAllQueueItemStates + " blockingjobs: " +
+        LOG.logp(FINE, getClass().getName(), "BuildBlockerProperty", "useBuildBlocker: " + useBuildBlocker + " blockOnNodeLevel: " +
+                blockOnNodeLevel + " blockOnGlobal: " + blockOnGlobalLevel + " scanAllQueue: " + scanAllQueueItemStates + " blockingJobs: " +
                 blockingJobs);
         this.useBuildBlocker = useBuildBlocker;
         this.blockOnNodeLevel = blockOnNodeLevel;
@@ -160,7 +157,6 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
     /**
      * Descriptor
      */
-    @SuppressWarnings("unused")
     @Extension
     public static final class BuildBlockerDescriptor extends JobPropertyDescriptor {
 

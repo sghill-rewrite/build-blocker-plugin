@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.FINE;
 
 /**
  * This class represents a monitor that checks all running jobs if
@@ -62,7 +63,6 @@ public class BlockingJobsMonitor {
     public BlockingJobsMonitor(String blockingJobs) {
         if (StringUtils.isNotBlank(blockingJobs)) {
             this.blockingJobs = asList(blockingJobs.split("\n"));
-            LOG.fine("blocking jobs: " + blockingJobs);
         }
     }
 
@@ -71,7 +71,7 @@ public class BlockingJobsMonitor {
 
         SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
-            LOG.fine("build " + item + " blocked by queued build " + buildableItem);
+            LOG.logp(FINE, getClass().getName(), "checkForBuildableQueueEntries", "build " + item + " blocked by queued build " + buildableItem);
             return buildableItem;
         }
         return null;
@@ -82,7 +82,7 @@ public class BlockingJobsMonitor {
 
         SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
-            LOG.fine("build " + item + " blocked by queued build " + buildableItem);
+            LOG.logp(FINE, getClass().getName(), "checkForQueueEntries", "build " + item + " blocked by queued " + "build " + buildableItem);
             return buildableItem;
         }
         return null;
@@ -94,7 +94,7 @@ public class BlockingJobsMonitor {
 
         SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
-            LOG.fine("build " + item + " blocked by queued build " + buildableItem);
+            LOG.logp(FINE, getClass().getName(), "checkNodeForBuildableQueueEntries", "build " + item + " blocked by " + "queued build " + buildableItem);
             return buildableItem;
         }
         return null;
@@ -110,7 +110,8 @@ public class BlockingJobsMonitor {
 
         SubTask buildableItem = checkForPlannedBuilds(item, buildableItemsOnNode);
         if (buildableItem != null) {
-            LOG.fine("build " + item + " blocked by queued build " + buildableItem);
+            LOG.logp(FINE, getClass().getName(), "checkNodeForQueueEntries", "build " + item + " blocked by queued build " +
+                    buildableItem);
             return buildableItem;
         }
         return null;
@@ -136,7 +137,7 @@ public class BlockingJobsMonitor {
         for (Executor executor : executors) {
             SubTask task = checkForRunningBuilds(executor);
             if (task != null) {
-                LOG.fine("build blocked by running build " + task);
+                LOG.logp(FINE, getClass().getName(), "checkComputerForRunningBuilds", "build blocked by running build " + task);
                 return task;
             }
         }

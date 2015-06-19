@@ -33,12 +33,18 @@ import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.model.queue.SubTask;
 
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.FINE;
+
 /**
  * Queue task dispatcher that evaluates the given blocking jobs in the config of the
  * actual job. If a blocking job is detected, the actual job will stay in the build queue.
  */
 @Extension
 public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
+
+    private static final Logger LOG = Logger.getLogger(BuildBlockerQueueTaskDispatcher.class.getName());
 
     private MonitorFactory monitorFactory;
 
@@ -136,34 +142,39 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
         BlockingJobsMonitor jobsMonitor = monitorFactory.build(properties.getBlockingJobs());
 
         if (checkWasCalledInGlobalContext(node) && properties.isBlockOnGlobalLevel()) {
+            LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkAllNodesForRunningBuilds");
             SubTask checkAllNodesForRunningBuildsResult = jobsMonitor.checkAllNodesForRunningBuilds();
             if (foundBlocker(checkAllNodesForRunningBuildsResult)) {
                 return checkAllNodesForRunningBuildsResult;
             }
             if (properties.isScanAllQueueItemStates()) {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkForQueueEntries");
                 SubTask checkForQueueEntriesResult = jobsMonitor.checkForQueueEntries(item);
                 if (foundBlocker(checkForQueueEntriesResult)) {
                     return checkForQueueEntriesResult;
                 }
             } else {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkForBuildableQueueEntries");
                 SubTask checkForBuildableQueueEntriesResult = jobsMonitor.checkForBuildableQueueEntries(item);
                 if (foundBlocker(checkForBuildableQueueEntriesResult)) {
                     return checkForBuildableQueueEntriesResult;
                 }
             }
         }
-        if (checkWasCalledInNodeContext(node) && properties.isBlockOnNodeLevel() && !properties.isBlockOnGlobalLevel
-                ()) {
+        if (checkWasCalledInNodeContext(node) && properties.isBlockOnNodeLevel() && !properties.isBlockOnGlobalLevel()) {
+            LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeForRunningBuilds");
             SubTask checkNodeForRunningBuildsResult = jobsMonitor.checkNodeForRunningBuilds(node);
             if (foundBlocker(checkNodeForRunningBuildsResult)) {
                 return checkNodeForRunningBuildsResult;
             }
             if (properties.isScanAllQueueItemStates()) {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeForQueueEntries");
                 SubTask checkNodeForQueueEntriesResult = jobsMonitor.checkNodeForQueueEntries(item, node);
                 if (foundBlocker(checkNodeForQueueEntriesResult)) {
                     return checkNodeForQueueEntriesResult;
                 }
             } else {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeFOrBuildableQueueEntries");
                 SubTask checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item,
                         node);
                 if (foundBlocker(checkNodeForBuildableQueueEntriesResult)) {
