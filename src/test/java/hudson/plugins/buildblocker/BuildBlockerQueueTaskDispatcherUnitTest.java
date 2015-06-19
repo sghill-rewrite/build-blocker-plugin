@@ -100,7 +100,27 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         verifyZeroInteractions(monitor);
     }
 
-    //can take ab hier========================
+    @Test
+    public void testCanRunWithGlobalEnabledAndNodeEnabledAndCheckAllDisabledCallsCorrectMethods() {
+        when(project.getProperty(eq(BuildBlockerProperty.class))).thenReturn(new BuildBlockerPropertyBuilder().setUseBuildBlocker(true).setBlockOnGlobalLevel(true).setBlockOnNodeLevel(true).setBlockingJobs("someJob").createBuildBlockerProperty());
+
+        dispatcher.canRun(item);
+
+        verify(monitor, times(1)).checkAllNodesForRunningBuilds();
+        verify(monitor, times(1)).checkForBuildableQueueEntries(Mockito.eq(item));
+        verifyNoMoreInteractions(monitor);
+    }
+
+    @Test
+    public void testCanRunWithGlobalEnabledAndNodeEnabledAndCheckAllEnabledCallsCorrectMethods() {
+        when(project.getProperty(eq(BuildBlockerProperty.class))).thenReturn(new BuildBlockerPropertyBuilder().setUseBuildBlocker(true).setBlockOnGlobalLevel(true).setBlockOnNodeLevel(true).setScanAllQueueItemStates(true).setBlockingJobs("someJob").createBuildBlockerProperty());
+
+        dispatcher.canRun(item);
+
+        verify(monitor, times(1)).checkAllNodesForRunningBuilds();
+        verify(monitor, times(1)).checkForQueueEntries(Mockito.eq(item));
+        verifyNoMoreInteractions(monitor);
+    }
 
     @Test
     public void testCanTakeWithBuildBlockerDisabledDoesNothing() {
@@ -158,6 +178,24 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         verify(monitor, times(1)).checkNodeForRunningBuilds(eq(node));
         verify(monitor, times(1)).checkNodeForQueueEntries(eq(item), eq(node));
         verifyNoMoreInteractions(monitor);
+    }
+
+    @Test
+    public void testCanTakeWithGlobalEnabledAndNodeEnabledAndCheckAllDisabledCallsCorrectMethods() {
+        when(project.getProperty(eq(BuildBlockerProperty.class))).thenReturn(new BuildBlockerPropertyBuilder().setUseBuildBlocker(true).setBlockOnGlobalLevel(true).setBlockOnNodeLevel(true).setBlockingJobs("someJob").createBuildBlockerProperty());
+
+        dispatcher.canTake(node, item);
+
+        verifyZeroInteractions(monitor);
+    }
+
+    @Test
+    public void testCanTakeWithGlobalEnabledAndNodeEnabledAndCheckAllEnabledCallsCorrectMethods() {
+        when(project.getProperty(eq(BuildBlockerProperty.class))).thenReturn(new BuildBlockerPropertyBuilder().setUseBuildBlocker(true).setBlockOnGlobalLevel(true).setBlockOnNodeLevel(true).setScanAllQueueItemStates(true).setBlockingJobs("someJob").createBuildBlockerProperty());
+
+        dispatcher.canTake(node, item);
+
+        verifyZeroInteractions(monitor);
     }
 
     private class FieldReturningMonitorFactory implements MonitorFactory {

@@ -110,6 +110,10 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
         return super.canTake(node, item);
     }
 
+    private CauseOfBlockage checkForBlock(Queue.Item item, BuildBlockerProperty blockingJobs) {
+        return checkForBlock(null, item, blockingJobs);
+    }
+
     private CauseOfBlockage checkForBlock(Node node, Queue.Item item, BuildBlockerProperty property) {
         if (property.getBlockingJobs() == null) {
             return null;
@@ -128,15 +132,15 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
         return null;
     }
 
-    private SubTask checkAccordingToProperties(Node node, Queue.Item item, BuildBlockerProperty property) {
-        BlockingJobsMonitor jobsMonitor = monitorFactory.build(property.getBlockingJobs());
+    private SubTask checkAccordingToProperties(Node node, Queue.Item item, BuildBlockerProperty properties) {
+        BlockingJobsMonitor jobsMonitor = monitorFactory.build(properties.getBlockingJobs());
 
-        if (checkWasCalledInGlobalContext(node) && property.isBlockOnGlobalLevel()) {
+        if (checkWasCalledInGlobalContext(node) && properties.isBlockOnGlobalLevel()) {
             SubTask checkAllNodesForRunningBuildsResult = jobsMonitor.checkAllNodesForRunningBuilds();
             if (foundBlocker(checkAllNodesForRunningBuildsResult)) {
                 return checkAllNodesForRunningBuildsResult;
             }
-            if (property.isScanAllQueueItemStates()) {
+            if (properties.isScanAllQueueItemStates()) {
                 SubTask checkForQueueEntriesResult = jobsMonitor.checkForQueueEntries(item);
                 if (foundBlocker(checkForQueueEntriesResult)) {
                     return checkForQueueEntriesResult;
@@ -147,12 +151,13 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
                     return checkForBuildableQueueEntriesResult;
                 }
             }
-        } else if (checkWasCalledInNodeContext(node) && property.isBlockOnNodeLevel()) {
+        }
+        if (checkWasCalledInNodeContext(node) && properties.isBlockOnNodeLevel() && !properties.isBlockOnGlobalLevel()) {
             SubTask checkNodeForRunningBuildsResult = jobsMonitor.checkNodeForRunningBuilds(node);
             if (foundBlocker(checkNodeForRunningBuildsResult)) {
                 return checkNodeForRunningBuildsResult;
             }
-            if (property.isScanAllQueueItemStates()) {
+            if (properties.isScanAllQueueItemStates()) {
                 SubTask checkNodeForQueueEntriesResult = jobsMonitor.checkNodeForQueueEntries(item, node);
                 if (foundBlocker(checkNodeForQueueEntriesResult)) {
                     return checkNodeForQueueEntriesResult;
@@ -178,11 +183,6 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
     private boolean foundBlocker(SubTask result) {
         return result != null;
     }
-
-    private CauseOfBlockage checkForBlock(Queue.Item item, BuildBlockerProperty blockingJobs) {
-        return checkForBlock(null, item, blockingJobs);
-    }
-
 
     private BuildBlockerProperty getBuildBlockerProperty(Queue.Item item) {
         AbstractProject project = (AbstractProject) item.task;

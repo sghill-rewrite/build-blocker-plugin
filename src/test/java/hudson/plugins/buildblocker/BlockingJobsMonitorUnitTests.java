@@ -139,6 +139,7 @@ public class BlockingJobsMonitorUnitTests {
         Jenkins jenkins = PowerMockito.mock(Jenkins.class);
         when(Jenkins.getInstance()).thenReturn(jenkins);
         when(jenkins.getQueue()).thenReturn(queue);
+        when(jenkins.getComputers()).thenReturn(new Computer[]{computer});
     }
 
     private void trainProjects() {
@@ -166,13 +167,6 @@ public class BlockingJobsMonitorUnitTests {
     }
 
     @Test
-    public void testCheckNodeForQueueEntriesReturnsNullIfNothingIsQueued() {
-        when(queue.getItems()).thenReturn(new Queue.Item[]{});
-
-        assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
-    }
-
-    @Test
     public void testCheckNodeForBuildableQueueEntriesReturnsBuildableTaskThatIsQueued() {
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
 
@@ -184,6 +178,13 @@ public class BlockingJobsMonitorUnitTests {
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
 
         assertThat(monitor.checkNodeForBuildableQueueEntries(Mockito.mock(BuildableItem.class), Mockito.mock(Node.class)), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckNodeForQueueEntriesReturnsNullIfNothingIsQueued() {
+        when(queue.getItems()).thenReturn(new Queue.Item[]{});
+
+        assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
     }
 
     @Test
@@ -236,13 +237,6 @@ public class BlockingJobsMonitorUnitTests {
     }
 
     @Test
-    public void testCheckForQueueEntriesReturnsNullIfNothingIsQueued() {
-        when(queue.getItems()).thenReturn(new Queue.Item[]{});
-
-        assertThat(monitor.checkForBuildableQueueEntries(buildableItem), is(nullValue()));
-    }
-
-    @Test
     public void testCheckForBuildableQueueEntriesItemDoesNotSelfBlock() {
         when(queue.getBuildableItems()).thenReturn(singletonList(buildableItem));
         assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
@@ -260,6 +254,13 @@ public class BlockingJobsMonitorUnitTests {
         when(queue.getBuildableItems()).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
 
         assertThat((Project) monitor.checkForBuildableQueueEntries(Mockito.mock(BuildableItem.class)), is(equalTo(project)));
+    }
+
+    @Test
+    public void testCheckForQueueEntriesReturnsNullIfNothingIsQueued() {
+        when(queue.getItems()).thenReturn(new Queue.Item[]{});
+
+        assertThat(monitor.checkForBuildableQueueEntries(buildableItem), is(nullValue()));
     }
 
     @Test
@@ -407,6 +408,94 @@ public class BlockingJobsMonitorUnitTests {
         assertThat(monitor.checkNodeForRunningBuilds(node), is(equalTo(subTask)));
     }
 
-    //TODO coverage vom monitor => 100%
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsNullForNonBusyExecutor() {
+        when(computer.getExecutors()).thenReturn(singletonList(idleExecutor));
+        when(computer.getOneOffExecutors()).thenReturn(new ArrayList<OneOffExecutor>());
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsNullForNonBusyOneOffExecutor() {
+        when(computer.getExecutors()).thenReturn(new ArrayList<Executor>());
+        when(computer.getOneOffExecutors()).thenReturn(singletonList(idleOneOffExecutor));
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsNullForDifferentRunningProject() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
+        Executable executable = Mockito.mock(Executable.class);
+        when(executor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
+
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsBlockedProjectIfItIsRunning() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
+        Executable executable = Mockito.mock(Executable.class);
+        when(executor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        when(subTask.getOwnerTask()).thenReturn(project);
+
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(equalTo(subTask)));
+    }
+
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsNullForDifferentRunningProjectOnOneOffExecutor() {
+        when(computer.getOneOffExecutors()).thenReturn(singletonList(oneOffExecutor));
+        Executable executable = Mockito.mock(Executable.class);
+        when(oneOffExecutor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
+
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsBlockedProjectIfItIsRunningOnOneOffExecutor() {
+        when(computer.getOneOffExecutors()).thenReturn(singletonList(oneOffExecutor));
+        Executable executable = Mockito.mock(Executable.class);
+        when(oneOffExecutor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        when(subTask.getOwnerTask()).thenReturn(project);
+
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(equalTo(subTask)));
+    }
+
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsNullForDifferentRunningMatrixProject() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
+        Executable executable = Mockito.mock(Executable.class);
+        when(executor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        MatrixConfiguration configuration = Mockito.mock(MatrixConfiguration.class);
+        when(subTask.getOwnerTask()).thenReturn(configuration);
+        when(configuration.getParent()).thenReturn(nonBlockingMatrixProject);
+
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+    }
+
+    @Test
+    public void testCheckAllNodesForRunningBuildReturnsBlockedMatrixProject() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
+        Executable executable = Mockito.mock(Executable.class);
+        when(executor.getCurrentExecutable()).thenReturn(executable);
+        SubTask subTask = Mockito.mock(SubTask.class);
+        when(executable.getParent()).thenReturn(subTask);
+        MatrixConfiguration configuration = Mockito.mock(MatrixConfiguration.class);
+        when(subTask.getOwnerTask()).thenReturn(configuration);
+        when(configuration.getParent()).thenReturn(matrixProject);
+
+        assertThat(monitor.checkAllNodesForRunningBuilds(), is(equalTo(subTask)));
+    }
 
 }
