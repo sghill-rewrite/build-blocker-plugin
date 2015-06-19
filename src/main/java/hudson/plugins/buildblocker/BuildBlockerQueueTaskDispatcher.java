@@ -33,16 +33,12 @@ import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.model.queue.SubTask;
 
-import java.util.logging.Logger;
-
 /**
  * Queue task dispatcher that evaluates the given blocking jobs in the config of the
  * actual job. If a blocking job is detected, the actual job will stay in the build queue.
  */
 @Extension
 public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
-
-    private static final Logger LOG = Logger.getLogger(BuildBlockerQueueTaskDispatcher.class.getName());
 
     private MonitorFactory monitorFactory;
 
