@@ -111,7 +111,8 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
 
     public void test3() {
         BlockingJobsMonitor blockingJobsMonitorUsingFullName = new BlockingJobsMonitor(blockingJobName);
-        assertEquals(blockingJobName, blockingJobsMonitorUsingFullName.checkAllNodesForRunningBuilds().getDisplayName());
+        assertEquals(blockingJobName, blockingJobsMonitorUsingFullName.checkAllNodesForRunningBuilds().getDisplayName
+                ());
         assertNull(blockingJobsMonitorUsingFullName.checkForBuildableQueueEntries(null));
 
     }
@@ -124,7 +125,8 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
 
     public void test5() {
         BlockingJobsMonitor blockingJobsMonitorUsingMoreLines = new BlockingJobsMonitor("xxx\nblock.*\nyyy");
-        assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLines.checkAllNodesForRunningBuilds().getDisplayName());
+        assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLines.checkAllNodesForRunningBuilds()
+                .getDisplayName());
         assertNull(blockingJobsMonitorUsingMoreLines.checkForBuildableQueueEntries(null));
 
     }

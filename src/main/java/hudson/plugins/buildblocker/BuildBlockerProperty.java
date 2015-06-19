@@ -142,8 +142,11 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
 
     @DataBoundConstructor
-    public BuildBlockerProperty(boolean useBuildBlocker, boolean blockOnNodeLevel, boolean blockOnGlobalLevel, boolean scanAllQueueItemStates, String blockingJobs) {
-        LOG.fine("useBuildBlocker: " + useBuildBlocker + " blockOnNodeLevel: " + blockOnNodeLevel + " blockonglobal: " + blockOnGlobalLevel + " scanallqueue: " + scanAllQueueItemStates + " blockingjobs: " + blockingJobs);
+    public BuildBlockerProperty(boolean useBuildBlocker, boolean blockOnNodeLevel, boolean blockOnGlobalLevel,
+                                boolean scanAllQueueItemStates, String blockingJobs) {
+        LOG.fine("useBuildBlocker: " + useBuildBlocker + " blockOnNodeLevel: " + blockOnNodeLevel + " blockonglobal: " +
+                "" + blockOnGlobalLevel + " scanallqueue: " + scanAllQueueItemStates + " blockingjobs: " +
+                blockingJobs);
         this.useBuildBlocker = useBuildBlocker;
         this.blockOnNodeLevel = blockOnNodeLevel;
         this.blockOnGlobalLevel = blockOnGlobalLevel;

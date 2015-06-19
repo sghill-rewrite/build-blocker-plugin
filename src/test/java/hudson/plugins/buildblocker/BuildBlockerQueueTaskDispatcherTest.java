@@ -76,13 +76,15 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         FreeStyleProject project = this.createFreeStyleProject();
         project.setAssignedLabel(slaveLabel);
 
-        Queue.BuildableItem item = new Queue.BuildableItem(new Queue.WaitingItem(Calendar.getInstance(), project, new ArrayList<Action>()));
+        Queue.BuildableItem item = new Queue.BuildableItem(new Queue.WaitingItem(Calendar.getInstance(), project, new
+                ArrayList<Action>()));
 
         CauseOfBlockage causeOfBlockage = dispatcher.canRun(item);
 
         assertNull(causeOfBlockage);
 
-        BuildBlockerProperty property = new BuildBlockerPropertyBuilder().setBlockingJobs(".*ocki.*").setUseBuildBlocker(true).setBlockOnGlobalLevel(true).createBuildBlockerProperty();
+        BuildBlockerProperty property = new BuildBlockerPropertyBuilder().setBlockingJobs(".*ocki.*")
+                .setUseBuildBlocker(true).setBlockOnGlobalLevel(true).createBuildBlockerProperty();
 
         project.addProperty(property);
 
@@ -106,7 +108,9 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         // Job2 returns immediatly but can't run while Job1 is running.
         FreeStyleProject theJob2 = createFreeStyleProject("MultipleExecutor_Job2");
         {
-            BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder().setBlockingJobs("MultipleExecutor_Job1").setUseBuildBlocker(true).setBlockOnGlobalLevel(true).createBuildBlockerProperty();
+            BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder().setBlockingJobs
+                    ("MultipleExecutor_Job1").setUseBuildBlocker(true).setBlockOnGlobalLevel(true)
+                    .createBuildBlockerProperty();
             theJob2.addProperty(theProperty);
         }
         assertTrue(theJob1.getBuilds().isEmpty());
@@ -134,7 +138,8 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
     public void testSelfExcludingJobs() throws Exception {
 
-        BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder().setBlockingJobs("SelfExcluding_.*").setUseBuildBlocker(true).setBlockOnGlobalLevel(true).createBuildBlockerProperty();
+        BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder().setBlockingJobs("SelfExcluding_.*")
+                .setUseBuildBlocker(true).setBlockOnGlobalLevel(true).createBuildBlockerProperty();
 
         FreeStyleProject theJob1 = createFreeStyleProject("SelfExcluding_Job1");
         theJob1.addProperty(theProperty);
@@ -209,7 +214,8 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
      * @return the future object for a newly created project
      * @throws IOException
      */
-    private Future<FreeStyleBuild> createBlockingProject(String blockingJobName, Shell shell, Label label) throws IOException {
+    private Future<FreeStyleBuild> createBlockingProject(String blockingJobName, Shell shell, Label label) throws
+            IOException {
         FreeStyleProject blockingProject = this.createFreeStyleProject(blockingJobName);
         blockingProject.setAssignedLabel(label);
 

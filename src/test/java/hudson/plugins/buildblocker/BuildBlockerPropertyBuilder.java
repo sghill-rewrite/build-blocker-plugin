@@ -33,6 +33,7 @@ public class BuildBlockerPropertyBuilder {
     }
 
     public BuildBlockerProperty createBuildBlockerProperty() {
-        return new BuildBlockerProperty(useBuildBlocker, blockOnNodeLevel, blockOnGlobalLevel, scanAllQueueItemStates, blockingJobs);
+        return new BuildBlockerProperty(useBuildBlocker, blockOnNodeLevel, blockOnGlobalLevel,
+                scanAllQueueItemStates, blockingJobs);
     }
 }

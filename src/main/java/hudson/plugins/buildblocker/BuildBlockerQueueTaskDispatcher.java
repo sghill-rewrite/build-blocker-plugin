@@ -52,14 +52,17 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
     }
 
     /**
-     * Called whenever {@link hudson.model.Queue} is considering if {@link hudson.model.Queue.Item} is ready to execute immediately
+     * Called whenever {@link hudson.model.Queue} is considering if {@link hudson.model.Queue.Item} is ready to
+     * execute immediately
      * (which doesn't necessarily mean that it gets executed right away &mdash; it's still subject to
      * executor availability), or if it should be considered blocked.
      * <p/>
      * <p/>
-     * Compared to {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, this version tells Jenkins that the task is
+     * Compared to {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, this version tells Jenkins
+     * that the task is
      * simply not ready to execute, even if there's available executor. This is more efficient
-     * than {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, and it sends the right signal to Jenkins so that
+     * than {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, and it sends the right signal to
+     * Jenkins so that
      * it won't use {@link hudson.slaves.Cloud} to try to provision new executors.
      * <p/>
      * <p/>
@@ -123,7 +126,8 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
                 result = ((MatrixConfiguration) result).getParent();
             }
 
-            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), result.getDisplayName()));
+            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), result
+                    .getDisplayName()));
         }
         return null;
     }
@@ -148,7 +152,8 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
                 }
             }
         }
-        if (checkWasCalledInNodeContext(node) && properties.isBlockOnNodeLevel() && !properties.isBlockOnGlobalLevel()) {
+        if (checkWasCalledInNodeContext(node) && properties.isBlockOnNodeLevel() && !properties.isBlockOnGlobalLevel
+                ()) {
             SubTask checkNodeForRunningBuildsResult = jobsMonitor.checkNodeForRunningBuilds(node);
             if (foundBlocker(checkNodeForRunningBuildsResult)) {
                 return checkNodeForRunningBuildsResult;
@@ -159,7 +164,8 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
                     return checkNodeForQueueEntriesResult;
                 }
             } else {
-                SubTask checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item, node);
+                SubTask checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item,
+                        node);
                 if (foundBlocker(checkNodeForBuildableQueueEntriesResult)) {
                     return checkNodeForBuildableQueueEntriesResult;
                 }
