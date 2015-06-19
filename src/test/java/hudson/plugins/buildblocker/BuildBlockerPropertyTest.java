@@ -45,7 +45,7 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
      * @throws Exception
      */
     public void testIsApplicable() throws Exception {
-        BuildBlockerProperty property = new BuildBlockerProperty();
+        BuildBlockerProperty property = new BuildBlockerPropertyBuilder().createBuildBlockerProperty();
 
         assertTrue(property.getDescriptor().isApplicable(Job.class));
     }
@@ -60,7 +60,7 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
         JSONObject formData = new JSONObject();
         StaplerRequest staplerRequest = EasyMock.createNiceMock(StaplerRequest.class);
 
-        BuildBlockerProperty property = new BuildBlockerProperty();
+        BuildBlockerProperty property = new BuildBlockerPropertyBuilder().createBuildBlockerProperty();
         property = (BuildBlockerProperty) property.getDescriptor().newInstance(staplerRequest, formData);
         assertNull(property.getBlockingJobs());
 

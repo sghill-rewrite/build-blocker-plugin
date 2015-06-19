@@ -44,6 +44,17 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
 
     private static final Logger LOG = Logger.getLogger(BuildBlockerQueueTaskDispatcher.class.getName());
 
+    private MonitorFactory monitorFactory;
+
+    public BuildBlockerQueueTaskDispatcher() {
+        monitorFactory = new DefaultMonitorFactory();
+    }
+
+    //default scope for testability
+    BuildBlockerQueueTaskDispatcher(MonitorFactory monitorFactory) {
+        this.monitorFactory = monitorFactory;
+    }
+
     /**
      * Called whenever {@link hudson.model.Queue} is considering if {@link hudson.model.Queue.Item} is ready to execute immediately
      * (which doesn't necessarily mean that it gets executed right away &mdash; it's still subject to
@@ -72,14 +83,12 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
      * @since 1.427
      */
     @Override
-    @SuppressWarnings("unchecked")
     public CauseOfBlockage canRun(Queue.Item item) {
         if (item.task instanceof AbstractProject) {
             BuildBlockerProperty property = getBuildBlockerProperty(item);
 
-            if (property != null && property.isBlockOnGlobalLevel()) {
-                LOG.fine("blockOnGlobalLevel is enabled => calling checkForBlock");
-                CauseOfBlockage subTask = checkForBlock(item, property.getBlockingJobs());
+            if (property != null && property.isUseBuildBlocker()) {
+                CauseOfBlockage subTask = checkForBlock(item, property);
                 if (subTask != null) {
                     return subTask;
                 }
@@ -92,40 +101,79 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
     @Override
     public CauseOfBlockage canTake(Node node, Queue.BuildableItem item) {
         BuildBlockerProperty property = getBuildBlockerProperty(item);
-        if (property != null && property.isBlockOnNodeLevel()) {
-            LOG.fine("blockOnNodeLevel is enabled => calling checkForBlock");
-            checkForBlock(item, property.getBlockingJobs());
+        if (property != null && property.isUseBuildBlocker()) {
+            CauseOfBlockage causeOfBlockage = checkForBlock(node, item, property);
+            if (causeOfBlockage != null) {
+                return causeOfBlockage;
+            }
         }
         return super.canTake(node, item);
     }
 
-    private CauseOfBlockage checkForBlock(Queue.Item item, String blockingJobs) {
-        if (blockingJobs == null) {
+    private CauseOfBlockage checkForBlock(Node node, Queue.Item item, BuildBlockerProperty property) {
+        if (property.getBlockingJobs() == null) {
             return null;
         }
-        BlockingJobsMonitor jobsMonitor = new BlockingJobsMonitor(blockingJobs);
-        //TODO depending on node / global, fork acordingly
-        SubTask subTask = jobsMonitor.checkAllNodesForRunningBuilds();
 
-        if (subTask != null) {
-            if (subTask instanceof MatrixConfiguration) {
-                subTask = ((MatrixConfiguration) subTask).getParent();
+        SubTask result = checkAccordingToProperties(node, item, property);
+
+
+        if (result != null) {
+            if (result instanceof MatrixConfiguration) {
+                result = ((MatrixConfiguration) result).getParent();
             }
 
-            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), subTask.getDisplayName()));
+            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), result.getDisplayName()));
         }
-
-        //TODO depending on node / global, fork acordingly
-        subTask = jobsMonitor.checkForBuildableQueueEntries(item);
-        if (subTask != null) {
-            if (subTask instanceof MatrixConfiguration) {
-                subTask = ((MatrixConfiguration) subTask).getParent();
-            }
-
-            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), subTask.getDisplayName()));
-        }
-
         return null;
+    }
+
+    private SubTask checkAccordingToProperties(Node node, Queue.Item item, BuildBlockerProperty property) {
+        BlockingJobsMonitor jobsMonitor = monitorFactory.build(property.getBlockingJobs());
+
+        if (property.isBlockOnGlobalLevel()) {
+            SubTask checkAllNodesForRunningBuildsResult = jobsMonitor.checkAllNodesForRunningBuilds();
+            if (foundBlocker(checkAllNodesForRunningBuildsResult)) {
+                return checkAllNodesForRunningBuildsResult;
+            }
+            if (property.isScanAllQueueItemStates()) {
+                SubTask checkForQueueEntriesResult = jobsMonitor.checkForQueueEntries(item);
+                if (foundBlocker(checkForQueueEntriesResult)) {
+                    return checkForQueueEntriesResult;
+                }
+            } else {
+                SubTask checkForBuildableQueueEntriesResult = jobsMonitor.checkForBuildableQueueEntries(item);
+                if (foundBlocker(checkForBuildableQueueEntriesResult)) {
+                    return checkForBuildableQueueEntriesResult;
+                }
+            }
+        }
+        if (node != null && property.isBlockOnNodeLevel()) {
+            SubTask checkNodeForRunningBuildsResult = jobsMonitor.checkNodeForRunningBuilds(node);
+            if (foundBlocker(checkNodeForRunningBuildsResult)) {
+                return checkNodeForRunningBuildsResult;
+            }
+            if (property.isScanAllQueueItemStates()) {
+                SubTask checkNodeForQueueEntriesResult = jobsMonitor.checkNodeForQueueEntries(item, node);
+                if (foundBlocker(checkNodeForQueueEntriesResult)) {
+                    return checkNodeForQueueEntriesResult;
+                }
+            } else {
+                SubTask checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item, node);
+                if (foundBlocker(checkNodeForBuildableQueueEntriesResult)) {
+                    return checkNodeForBuildableQueueEntriesResult;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean foundBlocker(SubTask result) {
+        return result != null;
+    }
+
+    private CauseOfBlockage checkForBlock(Queue.Item item, BuildBlockerProperty blockingJobs) {
+        return checkForBlock(null, item, blockingJobs);
     }
 
 
