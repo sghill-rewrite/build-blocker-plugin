@@ -47,7 +47,7 @@
             </f:entry>
             <f:entry
                     title="check all queued builds"
-                    description="consider all builds of the defined jobs for the blocking decision, including blocked, waiting and pending (overrides 'check queued builds')"
+                    description="consider all builds of the defined jobs for the blocking decision, including blocked, waiting, pending and buildable (overrides 'check queued builds')"
                     field="scanAllQueueItemStates">
                 <f:checkbox/>
             </f:entry>
