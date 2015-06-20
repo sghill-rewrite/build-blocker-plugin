@@ -29,17 +29,29 @@
         <f:entry title="${%Blocking jobs}" field="blockingJobs">
             <f:textarea/>
         </f:entry>
-        <f:entry title="enforce block on a global level" field="blockOnGlobalLevel">
-            <f:checkbox/>
-        </f:entry>
-        <f:entry title="enforce block on a per node level" field="blockOnNodeLevel">
-            <f:checkbox/>
-        </f:entry>
-        <f:entry
-                title="consider all states of jobs for blocking decision (includes jobs that are sleeping or blocked or..."
-                field="scanAllQueueItemStates">
-            <f:checkbox/>
-        </f:entry>
+        <f:section title="block level">
+            <f:entry title="block on global level" field="blockOnGlobalLevel"
+                     description="blocks this build if any of the defined jobs is running on any node (overrides 'block on node level')">
+                <f:checkbox/>
+            </f:entry>
+            <f:entry title="block on node level" field="blockOnNodeLevel"
+                     description="blocks this build if any of the defined jobs is running on the same node this build is running on">
+                <f:checkbox/>
+            </f:entry>
+        </f:section>
+        <f:section title="configure queue scaning">
+            <f:entry
+                    title="check queued builds" field="scanBuildableQueueItems"
+                    description="consider ready to run builds of the defined jobs for the blocking decision">
+                <f:checkbox/>
+            </f:entry>
+            <f:entry
+                    title="check all queued builds"
+                    description="consider all builds of the defined jobs for the blocking decision, including blocked, waiting and pending (overrides 'check queued builds')"
+                    field="scanAllQueueItemStates">
+                <f:checkbox/>
+            </f:entry>
+        </f:section>
         <f:entry title="">
             <div align="right">
                 <f:validateButton title="Validate Regex" progress="Checking..."

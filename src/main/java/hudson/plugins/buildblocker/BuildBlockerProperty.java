@@ -68,6 +68,7 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
     private boolean blockOnNodeLevel;
     private boolean blockOnGlobalLevel;
+    private boolean scanBuildableQueueItems;
     private boolean scanAllQueueItemStates;
 
     /**
@@ -129,6 +130,14 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         this.blockOnGlobalLevel = blockOnGlobalLevel;
     }
 
+    public boolean isScanBuildableQueueItems() {
+        return scanBuildableQueueItems;
+    }
+
+    public void setScanBuildableQueueItems(boolean scanBuildableQueueItems) {
+        this.scanBuildableQueueItems = scanBuildableQueueItems;
+    }
+
     public boolean isScanAllQueueItemStates() {
         return scanAllQueueItemStates;
     }
@@ -139,14 +148,15 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
 
     @DataBoundConstructor
-    public BuildBlockerProperty(boolean useBuildBlocker, boolean blockOnNodeLevel, boolean blockOnGlobalLevel,
-                                boolean scanAllQueueItemStates, String blockingJobs) {
+    public BuildBlockerProperty(boolean useBuildBlocker, boolean blockOnNodeLevel, boolean blockOnGlobalLevel, boolean scanBuildableQueueItems, boolean
+            scanAllQueueItemStates, String blockingJobs) {
         LOG.logp(FINE, getClass().getName(), "BuildBlockerProperty", "useBuildBlocker: " + useBuildBlocker + " blockOnNodeLevel: " +
                 blockOnNodeLevel + " blockOnGlobal: " + blockOnGlobalLevel + " scanAllQueue: " + scanAllQueueItemStates + " blockingJobs: " +
                 blockingJobs);
         this.useBuildBlocker = useBuildBlocker;
         this.blockOnNodeLevel = blockOnNodeLevel;
         this.blockOnGlobalLevel = blockOnGlobalLevel;
+        this.scanBuildableQueueItems = scanBuildableQueueItems;
         this.scanAllQueueItemStates = scanAllQueueItemStates;
         this.blockingJobs = blockingJobs;
     }

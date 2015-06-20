@@ -5,6 +5,7 @@ public class BuildBlockerPropertyBuilder {
     private boolean blockOnNodeLevel = false;
     private boolean blockOnGlobalLevel = false;
     private boolean scanAllQueueItemStates = false;
+    private boolean scanBuildableQueueItemStates = false;
     private String blockingJobs = null;
 
     public BuildBlockerPropertyBuilder setUseBuildBlocker(boolean useBuildBlocker) {
@@ -27,13 +28,18 @@ public class BuildBlockerPropertyBuilder {
         return this;
     }
 
+    public BuildBlockerPropertyBuilder setScanBuildableQueueItemStates(boolean scanAllQueueItemStates) {
+        this.scanAllQueueItemStates = scanAllQueueItemStates;
+        return this;
+    }
+
     public BuildBlockerPropertyBuilder setBlockingJobs(String blockingJobs) {
         this.blockingJobs = blockingJobs;
         return this;
     }
 
     public BuildBlockerProperty createBuildBlockerProperty() {
-        return new BuildBlockerProperty(useBuildBlocker, blockOnNodeLevel, blockOnGlobalLevel,
-                scanAllQueueItemStates, blockingJobs);
+        return new BuildBlockerProperty(useBuildBlocker, blockOnNodeLevel, blockOnGlobalLevel, scanBuildableQueueItemStates, scanAllQueueItemStates,
+                blockingJobs);
     }
 }
