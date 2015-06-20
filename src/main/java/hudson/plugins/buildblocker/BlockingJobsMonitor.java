@@ -167,10 +167,7 @@ public class BlockingJobsMonitor {
 
     private SubTask checkForRunningBuilds(Executor executor) {
         if (executor.isBusy()) {
-            Queue.Executable currentExecutable = executor.getCurrentExecutable();
-
-            SubTask subTask = currentExecutable.getParent();
-            Queue.Task task = subTask.getOwnerTask();
+            Queue.Task task = executor.getCurrentWorkUnit().work.getOwnerTask();
 
             if (task instanceof MatrixConfiguration) {
                 task = ((MatrixConfiguration) task).getParent();
@@ -181,7 +178,7 @@ public class BlockingJobsMonitor {
             for (String blockingJob : this.blockingJobs) {
                 try {
                     if (project.getFullName().matches(blockingJob)) {
-                        return subTask;
+                        return task;
                     }
                 } catch (java.util.regex.PatternSyntaxException pse) {
                     return null;
