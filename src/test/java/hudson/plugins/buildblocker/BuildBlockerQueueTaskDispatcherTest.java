@@ -24,7 +24,15 @@
 
 package hudson.plugins.buildblocker;
 
-import hudson.model.*;
+import hudson.model.Action;
+import hudson.model.Computer;
+import hudson.model.Executor;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Hudson;
+import hudson.model.Label;
+import hudson.model.Queue;
+import hudson.model.Run;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.CauseOfBlockage;
 import hudson.slaves.DumbSlave;

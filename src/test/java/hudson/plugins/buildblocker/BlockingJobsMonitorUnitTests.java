@@ -2,7 +2,13 @@ package hudson.plugins.buildblocker;
 
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixProject;
-import hudson.model.*;
+import hudson.model.Computer;
+import hudson.model.Executor;
+import hudson.model.Label;
+import hudson.model.Node;
+import hudson.model.OneOffExecutor;
+import hudson.model.Project;
+import hudson.model.Queue;
 import hudson.model.Queue.BuildableItem;
 import hudson.model.queue.SubTask;
 import hudson.model.queue.WorkUnit;
@@ -22,7 +28,9 @@ import java.util.Collections;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
