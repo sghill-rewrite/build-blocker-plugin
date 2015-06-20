@@ -28,8 +28,8 @@ public class BuildBlockerPropertyBuilder {
         return this;
     }
 
-    public BuildBlockerPropertyBuilder setScanBuildableQueueItemStates(boolean scanAllQueueItemStates) {
-        this.scanAllQueueItemStates = scanAllQueueItemStates;
+    public BuildBlockerPropertyBuilder setScanBuildableQueueItemStates(boolean scanBuildableQueueItemStates) {
+        this.scanBuildableQueueItemStates = scanBuildableQueueItemStates;
         return this;
     }
 

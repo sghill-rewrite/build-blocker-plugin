@@ -89,8 +89,11 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
         assertNull(causeOfBlockage);
 
-        BuildBlockerProperty property = new BuildBlockerPropertyBuilder().setBlockingJobs(".*ocki.*")
-                .setUseBuildBlocker(true).setBlockOnGlobalLevel(true).createBuildBlockerProperty();
+        BuildBlockerProperty property = new BuildBlockerPropertyBuilder()
+                .setBlockingJobs(".*ocki.*")
+                .setUseBuildBlocker(true)
+                .setBlockOnGlobalLevel(true)
+                .createBuildBlockerProperty();
 
         project.addProperty(property);
 
@@ -114,8 +117,11 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         // Job2 returns immediatly but can't run while Job1 is running.
         FreeStyleProject theJob2 = createFreeStyleProject("MultipleExecutor_Job2");
         {
-            BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder().setBlockingJobs
-                    ("MultipleExecutor_Job1").setUseBuildBlocker(true).setBlockOnGlobalLevel(true)
+            BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder()
+                    .setBlockingJobs("MultipleExecutor_Job1")
+                    .setUseBuildBlocker(true)
+                    .setBlockOnGlobalLevel(true)
+                    .setScanBuildableQueueItemStates(true)
                     .createBuildBlockerProperty();
             theJob2.addProperty(theProperty);
         }
@@ -144,8 +150,12 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
     public void testSelfExcludingJobs() throws Exception {
 
-        BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder().setBlockingJobs("SelfExcluding_.*")
-                .setUseBuildBlocker(true).setBlockOnGlobalLevel(true).createBuildBlockerProperty();
+        BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder()
+                .setBlockingJobs("SelfExcluding_.*")
+                .setUseBuildBlocker(true)
+                .setBlockOnGlobalLevel(true)
+                .setScanBuildableQueueItemStates(true)
+                .createBuildBlockerProperty();
 
         FreeStyleProject theJob1 = createFreeStyleProject("SelfExcluding_Job1");
         theJob1.addProperty(theProperty);

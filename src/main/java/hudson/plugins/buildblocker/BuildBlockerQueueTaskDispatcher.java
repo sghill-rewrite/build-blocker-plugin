@@ -153,7 +153,7 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
                 if (foundBlocker(checkForQueueEntriesResult)) {
                     return checkForQueueEntriesResult;
                 }
-            } else {
+            } else if (properties.isScanBuildableQueueItems()) {
                 LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkForBuildableQueueEntries");
                 SubTask checkForBuildableQueueEntriesResult = jobsMonitor.checkForBuildableQueueEntries(item);
                 if (foundBlocker(checkForBuildableQueueEntriesResult)) {
@@ -173,10 +173,9 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
                 if (foundBlocker(checkNodeForQueueEntriesResult)) {
                     return checkNodeForQueueEntriesResult;
                 }
-            } else {
+            } else if (properties.isScanBuildableQueueItems()) {
                 LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeFOrBuildableQueueEntries");
-                SubTask checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item,
-                        node);
+                SubTask checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item, node);
                 if (foundBlocker(checkNodeForBuildableQueueEntriesResult)) {
                     return checkNodeForBuildableQueueEntriesResult;
                 }
