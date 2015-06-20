@@ -24,7 +24,6 @@
 
 package hudson.plugins.buildblocker;
 
-import com.google.common.base.Predicate;
 import hudson.model.*;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.CauseOfBlockage;
@@ -76,8 +75,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         FreeStyleProject project = this.createFreeStyleProject();
         project.setAssignedLabel(slaveLabel);
 
-        Queue.BuildableItem item = new Queue.BuildableItem(new Queue.WaitingItem(Calendar.getInstance(), project, new
-                ArrayList<Action>()));
+        Queue.BuildableItem item = new Queue.BuildableItem(new Queue.WaitingItem(Calendar.getInstance(), project, new ArrayList<Action>()));
 
         CauseOfBlockage causeOfBlockage = dispatcher.canRun(item);
 
@@ -160,14 +158,6 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         long theEndTime = theStartTime;
         while ((!theFuture1.isDone() || !theFuture2.isDone())
                 && theEndTime < theStartTime + 5000) {
-//            assertThat(
-//                    of(
-//                            getInstance()
-//                                    .getComputers())
-//                            .transformAndConcat(extractExecutors())
-//                            .filter(filterBusyExecutors())
-//                            .toList()
-//                    , hasSize(1));
             int countBusy = 0;
             for (Computer computor : Hudson.getInstance().getComputers()) {
                 for (Executor executor : computor.getExecutors()) {
@@ -188,22 +178,6 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         theJob2.delete();
         theJob1.delete();
     }
-
-    private Predicate<Executor> filterBusyExecutors() {
-        return new Predicate<Executor>() {
-            public boolean apply(Executor input) {
-                return input.isBusy();
-            }
-        };
-    }
-
-//    private Function<Computer, Iterable<Executor>> extractExecutors() {
-//        return new Function<Computer, Iterable<Executor>>() {
-//            public Iterable<Executor> apply(Computer input) {
-//                return from(input.getExecutors());
-//            }
-//        };
-//    }
 
     /**
      * Returns the future object for a newly created project.
