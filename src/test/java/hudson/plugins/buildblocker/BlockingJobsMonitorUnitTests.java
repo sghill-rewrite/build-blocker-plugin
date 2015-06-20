@@ -400,6 +400,7 @@ public class BlockingJobsMonitorUnitTests {
 
     @Test
     public void testCheckNodeForRunningBuildReturnsNullForDifferentRunningMatrixProject() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
         when(subTask.getOwnerTask()).thenReturn(configuration);
         when(configuration.getParent()).thenReturn(nonBlockingMatrixProject);
 
@@ -431,6 +432,7 @@ public class BlockingJobsMonitorUnitTests {
 
     @Test
     public void testCheckAllNodesForRunningBuildReturnsNullForDifferentRunningProject() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
         when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
 
         assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
@@ -446,6 +448,7 @@ public class BlockingJobsMonitorUnitTests {
 
     @Test
     public void testCheckAllNodesForRunningBuildReturnsNullForDifferentRunningProjectOnOneOffExecutor() {
+        when(computer.getOneOffExecutors()).thenReturn(singletonList(oneOffExecutor));
         when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
 
         assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
@@ -461,6 +464,7 @@ public class BlockingJobsMonitorUnitTests {
 
     @Test
     public void testCheckAllNodesForRunningBuildReturnsNullForDifferentRunningMatrixProject() {
+        when(computer.getExecutors()).thenReturn(singletonList(executor));
         when(subTask.getOwnerTask()).thenReturn(configuration);
         when(configuration.getParent()).thenReturn(nonBlockingMatrixProject);
 
