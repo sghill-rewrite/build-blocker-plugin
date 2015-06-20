@@ -33,6 +33,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.support.membermodification.MemberMatcher.field;
 
@@ -179,7 +183,11 @@ public class BlockingJobsMonitorUnitTests {
     @Test
     public void testCheckNodeForBuildableQueueEntriesItemDoesNotSelfBlock() {
         when(queue.getBuildableItems(Mockito.any(Computer.class))).thenReturn(singletonList(buildableItem));
+
         assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
+
+        //the do not selfblock condition is hit => no interactions with the project
+        verifyZeroInteractions(project);
     }
 
     @Test
@@ -193,71 +201,77 @@ public class BlockingJobsMonitorUnitTests {
     public void testCheckNodeForBuildableQueueEntriesReturnsBuildableTaskThatIsQueued() {
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
 
-        assertThat((Project) monitor.checkNodeForBuildableQueueEntries(Mockito.mock(BuildableItem.class), node), is
-                (equalTo(project)));
+        assertThat((Project) monitor.checkNodeForBuildableQueueEntries(Mockito.mock(BuildableItem.class), node), is(equalTo(project)));
     }
 
     @Test
     public void testCheckNodeForBuildableQueueEntriesReturnsNullForDifferentNode() {
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
+        Node differentNode = Mockito.mock(Node.class);
+        Computer differentComputer = Mockito.mock(Computer.class);
+        when(differentNode.toComputer()).thenReturn(differentComputer);
+        when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
+        when(queue.getBuildableItems(eq(differentComputer))).thenReturn(Collections.<BuildableItem>emptyList());
 
-        assertThat(monitor.checkNodeForBuildableQueueEntries(Mockito.mock(BuildableItem.class), Mockito.mock(Node
-                .class)), is(nullValue()));
+        assertThat(monitor.checkNodeForBuildableQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullIfNothingIsQueued() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{});
 
-        assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
+        assertThat(monitor.checkNodeForQueueEntries(buildableItem, node), is(nullValue()));
     }
 
     @Test
     public void testCheckNodeForQueueEntriesReturnsBuildableTaskThatIsQueued() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBuildableItem, buildableItem});
 
-        assertThat((Project) monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), node), is(equalTo
-                (project)));
+        assertThat((Project) monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), node), is(equalTo(project)));
     }
 
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNode() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBuildableItem, buildableItemOnDifferentNode});
+        Node differentNode = Mockito.mock(Node.class);
+        Computer differentComputer = Mockito.mock(Computer.class);
+        when(differentNode.toComputer()).thenReturn(differentComputer);
 
-        assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), Mockito.mock(Node.class)), is
-                (nullValue()));
+        assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
     public void testCheckNodeForQueueEntriesReturnsBlockedTaskThatIsQueued() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBlockedItem, blockedItem});
 
-        assertThat((Project) monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), node), is(equalTo
-                (project)));
+        assertThat((Project) monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), node), is(equalTo(project)));
     }
 
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNodeCaseBlocked() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBlockedItem, blockedItemOnDifferentNode});
+        Node differentNode = Mockito.mock(Node.class);
+        Computer differentComputer = Mockito.mock(Computer.class);
+        when(differentNode.toComputer()).thenReturn(differentComputer);
 
-        assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), Mockito.mock(Node.class)), is
-                (nullValue()));
+        assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
     public void testCheckNodeForQueueEntriesReturnsWaitingTaskThatIsQueued() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingWaitingItem, waitingItem});
 
-        assertThat((Project) monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), node), is(equalTo
-                (project)));
+        assertThat((Project) monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), node), is(equalTo(project)));
     }
 
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNodeCaseWaiting() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingWaitingItem, waitingItemOnDifferentNode});
+        Node differentNode = Mockito.mock(Node.class);
+        Computer differentComputer = Mockito.mock(Computer.class);
+        when(differentNode.toComputer()).thenReturn(differentComputer);
 
-        assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), Mockito.mock(Node.class)), is
-                (nullValue()));
+        assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
@@ -270,30 +284,32 @@ public class BlockingJobsMonitorUnitTests {
     @Test
     public void testCheckForBuildableQueueEntriesItemDoesNotSelfBlock() {
         when(queue.getBuildableItems()).thenReturn(singletonList(buildableItem));
+
         assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
+
+        //the do not selfblock condition is hit => no interactions with the project
+        verifyZeroInteractions(project);
     }
 
     @Test
     public void testCheckForBuildableQueueEntriesReturnsBuildableTaskThatIsQueued() {
         when(queue.getBuildableItems()).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
 
-        assertThat((Project) monitor.checkForBuildableQueueEntries(Mockito.mock(BuildableItem.class)), is(equalTo
-                (project)));
+        assertThat((Project) monitor.checkForBuildableQueueEntries(Mockito.mock(BuildableItem.class)), is(equalTo(project)));
     }
 
     @Test
     public void testCheckForBuildableQueueEntriesReturnsProjectForDifferentNode() {
         when(queue.getBuildableItems()).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
 
-        assertThat((Project) monitor.checkForBuildableQueueEntries(Mockito.mock(BuildableItem.class)), is(equalTo
-                (project)));
+        assertThat((Project) monitor.checkForBuildableQueueEntries(Mockito.mock(BuildableItem.class)), is(equalTo(project)));
     }
 
     @Test
     public void testCheckForQueueEntriesReturnsNullIfNothingIsQueued() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{});
 
-        assertThat(monitor.checkForBuildableQueueEntries(buildableItem), is(nullValue()));
+        assertThat(monitor.checkForQueueEntries(buildableItem), is(nullValue()));
     }
 
     @Test
@@ -340,10 +356,12 @@ public class BlockingJobsMonitorUnitTests {
 
     @Test
     public void testCheckForQueueEntriesReturnsNullForNonBlockingItems() {
-        when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingWaitingItem, nonBlockingBuildableItem,
-                nonBlockingBlockedItem});
+        when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingWaitingItem, nonBlockingBuildableItem, nonBlockingBlockedItem});
 
         assertThat((Project) monitor.checkForQueueEntries(Mockito.mock(BuildableItem.class)), is(nullValue()));
+
+        //verify that the different project was actually checked (three items are checked for two job names each)
+        verify(nonBlockingProject, times(6)).getFullName();
     }
 
 
@@ -356,22 +374,31 @@ public class BlockingJobsMonitorUnitTests {
     public void testCheckNodeForRunningBuildReturnsNullForNonBusyExecutor() {
         when(computer.getExecutors()).thenReturn(singletonList(idleExecutor));
         when(computer.getOneOffExecutors()).thenReturn(new ArrayList<OneOffExecutor>());
+
         assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+
+        verify(idleExecutor, only()).isBusy();
     }
 
     @Test
     public void testCheckNodeForRunningBuildReturnsNullForNonBusyOneOffExecutor() {
         when(computer.getExecutors()).thenReturn(new ArrayList<Executor>());
         when(computer.getOneOffExecutors()).thenReturn(singletonList(idleOneOffExecutor));
+
         assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+
+        verify(idleOneOffExecutor, only()).isBusy();
     }
 
     @Test
-    public void testCheckNodeForRunningBuildReturnsNullForDifferentRunningProject() throws IllegalAccessException {
+    public void testCheckNodeForRunningBuildReturnsNullForDifferentRunningProject() {
         when(computer.getExecutors()).thenReturn(singletonList(executor));
         when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
 
         assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+
+        //verify that the different project was actually checked (two job names are checked)
+        verify(nonBlockingProject, times(2)).getFullName();
     }
 
     @Test
@@ -388,6 +415,9 @@ public class BlockingJobsMonitorUnitTests {
         when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
 
         assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+
+        //verify that the different project was actually checked (two job names are checked)
+        verify(nonBlockingProject, times(2)).getFullName();
     }
 
     @Test
@@ -405,6 +435,9 @@ public class BlockingJobsMonitorUnitTests {
         when(configuration.getParent()).thenReturn(nonBlockingMatrixProject);
 
         assertThat(monitor.checkNodeForRunningBuilds(node), is(nullValue()));
+
+        //verify that the different project was actually checked (two job names are checked)
+        verify(nonBlockingMatrixProject, times(2)).getFullName();
     }
 
     @Test
@@ -420,7 +453,10 @@ public class BlockingJobsMonitorUnitTests {
     public void testCheckAllNodesForRunningBuildReturnsNullForNonBusyExecutor() {
         when(computer.getExecutors()).thenReturn(singletonList(idleExecutor));
         when(computer.getOneOffExecutors()).thenReturn(new ArrayList<OneOffExecutor>());
+
         assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+
+        verify(idleExecutor, only()).isBusy();
     }
 
     @Test
@@ -428,6 +464,8 @@ public class BlockingJobsMonitorUnitTests {
         when(computer.getExecutors()).thenReturn(new ArrayList<Executor>());
         when(computer.getOneOffExecutors()).thenReturn(singletonList(idleOneOffExecutor));
         assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+
+        verify(idleOneOffExecutor, only()).isBusy();
     }
 
     @Test
@@ -436,6 +474,9 @@ public class BlockingJobsMonitorUnitTests {
         when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
 
         assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+
+        //verify that the different project was actually checked (two job names are checked)
+        verify(nonBlockingProject, times(2)).getFullName();
     }
 
     @Test
@@ -452,6 +493,9 @@ public class BlockingJobsMonitorUnitTests {
         when(subTask.getOwnerTask()).thenReturn(nonBlockingProject);
 
         assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+
+        //verify that the different project was actually checked (two job names are checked)
+        verify(nonBlockingProject, times(2)).getFullName();
     }
 
     @Test
@@ -469,6 +513,9 @@ public class BlockingJobsMonitorUnitTests {
         when(configuration.getParent()).thenReturn(nonBlockingMatrixProject);
 
         assertThat(monitor.checkAllNodesForRunningBuilds(), is(nullValue()));
+
+        //verify that the different project was actually checked (two job names are checked)
+        verify(nonBlockingMatrixProject, times(2)).getFullName();
     }
 
     @Test

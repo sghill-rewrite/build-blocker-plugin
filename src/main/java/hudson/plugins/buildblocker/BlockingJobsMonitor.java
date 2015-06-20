@@ -93,8 +93,7 @@ public class BlockingJobsMonitor {
     }
 
     public SubTask checkNodeForBuildableQueueEntries(Queue.Item item, Node node) {
-        List<? extends Queue.Item> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node
-                .toComputer());
+        List<? extends Queue.Item> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node.toComputer());
 
         SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
