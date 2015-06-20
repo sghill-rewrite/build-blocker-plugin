@@ -66,22 +66,26 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
      */
     private boolean useBuildBlocker;
 
-    private boolean blockOnNodeLevel;
-    private boolean blockOnGlobalLevel;
-    private boolean scanBuildableQueueItems;
-    private boolean scanAllQueueItemStates;
-
+    private BlockLevel blockLevel;
+    private QueueScanScope scanQueueFor;
     /**
      * the job names that block the build if running
      */
     private String blockingJobs;
+
+    public BlockLevel getBlockLevel() {
+        return blockLevel;
+    }
+
+    public QueueScanScope getScanQueueFor() {
+        return scanQueueFor;
+    }
 
     /**
      * Returns true if the build blocker is enabled.
      *
      * @return true if the build blocker is enabled
      */
-    @SuppressWarnings("unused")
     public boolean isUseBuildBlocker() {
         return useBuildBlocker;
     }
@@ -114,55 +118,18 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         this.blockingJobs = blockingJobs;
     }
 
-    public boolean isBlockOnNodeLevel() {
-        return blockOnNodeLevel;
-    }
-
-    public void setBlockOnNodeLevel(boolean blockOnNodeLevel) {
-        this.blockOnNodeLevel = blockOnNodeLevel;
-    }
-
-    public boolean isBlockOnGlobalLevel() {
-        return blockOnGlobalLevel;
-    }
-
-    public void setBlockOnGlobalLevel(boolean blockOnGlobalLevel) {
-        this.blockOnGlobalLevel = blockOnGlobalLevel;
-    }
-
-    public boolean isScanBuildableQueueItems() {
-        return scanBuildableQueueItems;
-    }
-
-    public void setScanBuildableQueueItems(boolean scanBuildableQueueItems) {
-        this.scanBuildableQueueItems = scanBuildableQueueItems;
-    }
-
-    public boolean isScanAllQueueItemStates() {
-        return scanAllQueueItemStates;
-    }
-
-    public void setScanAllQueueItemStates(boolean scanAllQueueItemStates) {
-        this.scanAllQueueItemStates = scanAllQueueItemStates;
-    }
-
-
     @DataBoundConstructor
-    public BuildBlockerProperty(boolean useBuildBlocker, boolean blockOnNodeLevel, boolean blockOnGlobalLevel, boolean scanBuildableQueueItems, boolean
-            scanAllQueueItemStates, String blockingJobs) {
-        LOG.logp(FINE, getClass().getName(), "BuildBlockerProperty", "useBuildBlocker: " + useBuildBlocker + " blockOnNodeLevel: " +
-                blockOnNodeLevel + " blockOnGlobal: " + blockOnGlobalLevel + " scanAllQueue: " + scanAllQueueItemStates + " blockingJobs: " +
-                blockingJobs);
+    public BuildBlockerProperty(boolean useBuildBlocker, BlockLevel blockLevel, QueueScanScope scanQueueFor, String blockingJobs) {
+        LOG.logp(FINE, getClass().getName(), "BuildBlockerProperty", "useBuildBlocker: " + useBuildBlocker + " blockLevel: " + blockLevel + " scanQueueFor: " +
+                scanQueueFor + " blockingJobs: " + blockingJobs);
         this.useBuildBlocker = useBuildBlocker;
-        this.blockOnNodeLevel = blockOnNodeLevel;
-        this.blockOnGlobalLevel = blockOnGlobalLevel;
-        this.scanBuildableQueueItems = scanBuildableQueueItems;
-        this.scanAllQueueItemStates = scanAllQueueItemStates;
+        this.scanQueueFor = scanQueueFor;
+        this.blockLevel = blockLevel;
         this.blockingJobs = blockingJobs;
     }
 
-    public BuildBlockerProperty() {
-    }
+//    public BuildBlockerProperty() {
+//    }
 
     /**
      * Descriptor
@@ -214,6 +181,71 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         @Override
         public boolean isApplicable(Class<? extends Job> jobType) {
             return true;
+        }
+    }
+
+    public static class BlockLevel {
+        private static final String GLOBAL = "global";
+        private static final String NODE = "node";
+
+        //default is global
+        private String value = GLOBAL;
+
+        @DataBoundConstructor
+        public BlockLevel(String value) {
+            this.value = value;
+        }
+
+        public boolean isGlobal() {
+            return value.equals(GLOBAL);
+        }
+
+        public boolean isNode() {
+            return value.equals(NODE);
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "BlockLevel{" + "value='" + value + '\'' + '}';
+        }
+    }
+
+    public static class QueueScanScope {
+        private static final String ALL = "all";
+        private static final String BUILDABLE = "buildable";
+        public static final String DISABLED = "disabled";
+
+        //default is disabled
+        private String value = DISABLED;
+
+        @DataBoundConstructor
+        public QueueScanScope(String value) {
+            this.value = value;
+        }
+
+        public boolean isAll() {
+            return value.equals(ALL);
+        }
+
+        public boolean isBuildable() {
+            return value.equals(BUILDABLE);
+        }
+
+        public boolean isDisabled() {
+            return !isAll() && !isBuildable();
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "QueueScanScope{" + "value='" + value + '\'' + '}';
         }
     }
 

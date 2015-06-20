@@ -1,12 +1,13 @@
 package hudson.plugins.buildblocker;
 
+import hudson.plugins.buildblocker.BuildBlockerProperty.BlockLevel;
+import hudson.plugins.buildblocker.BuildBlockerProperty.QueueScanScope;
+
 public class BuildBlockerPropertyBuilder {
     private boolean useBuildBlocker = false;
-    private boolean blockOnNodeLevel = false;
-    private boolean blockOnGlobalLevel = false;
-    private boolean scanAllQueueItemStates = false;
-    private boolean scanBuildableQueueItemStates = false;
-    private String blockingJobs = null;
+    private String blockLevel = "";
+    private String scanQueueFor = "";
+    private String blockingJobs = "";
 
     public BuildBlockerPropertyBuilder setUseBuildBlocker(boolean useBuildBlocker) {
         this.useBuildBlocker = useBuildBlocker;
@@ -14,22 +15,26 @@ public class BuildBlockerPropertyBuilder {
     }
 
     public BuildBlockerPropertyBuilder setBlockOnNodeLevel(boolean blockOnNodeLevel) {
-        this.blockOnNodeLevel = blockOnNodeLevel;
+        if (!blockLevel.equals("global")) {
+            this.blockLevel = "node";
+        }
         return this;
     }
 
     public BuildBlockerPropertyBuilder setBlockOnGlobalLevel(boolean blockOnGlobalLevel) {
-        this.blockOnGlobalLevel = blockOnGlobalLevel;
+        this.blockLevel = "global";
         return this;
     }
 
     public BuildBlockerPropertyBuilder setScanAllQueueItemStates(boolean scanAllQueueItemStates) {
-        this.scanAllQueueItemStates = scanAllQueueItemStates;
+        this.scanQueueFor = "all";
         return this;
     }
 
     public BuildBlockerPropertyBuilder setScanBuildableQueueItemStates(boolean scanBuildableQueueItemStates) {
-        this.scanBuildableQueueItemStates = scanBuildableQueueItemStates;
+        if (!scanQueueFor.equals("all")) {
+            this.scanQueueFor = "buildable";
+        }
         return this;
     }
 
@@ -39,7 +44,6 @@ public class BuildBlockerPropertyBuilder {
     }
 
     public BuildBlockerProperty createBuildBlockerProperty() {
-        return new BuildBlockerProperty(useBuildBlocker, blockOnNodeLevel, blockOnGlobalLevel, scanBuildableQueueItemStates, scanAllQueueItemStates,
-                blockingJobs);
+        return new BuildBlockerProperty(useBuildBlocker, new BlockLevel(blockLevel), new QueueScanScope(scanQueueFor), blockingJobs);
     }
 }

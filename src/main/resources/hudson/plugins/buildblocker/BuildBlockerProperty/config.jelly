@@ -29,28 +29,23 @@
         <f:entry title="${%Blocking jobs}" field="blockingJobs">
             <f:textarea/>
         </f:entry>
-        <f:section title="block level">
-            <f:entry title="block on global level" field="blockOnGlobalLevel"
-                     description="blocks this build if any of the defined jobs is running on any node (overrides 'block on node level')">
-                <f:checkbox/>
-            </f:entry>
-            <f:entry title="block on node level" field="blockOnNodeLevel"
-                     description="blocks this build if any of the defined jobs is running on the same node this build is running on">
-                <f:checkbox/>
-            </f:entry>
+        <f:section title="configure block level">
+            <!--blocks this build if any of the defined jobs is running on any node (overrides 'block on node level')-->
+            <f:radioBlock title="block on global level" name="blockLevel" value="global"
+                          checked="${empty instance.blockLevel or instance.blockLevel.value == 'global'}"/>
+            <f:radioBlock title="block on node level" name="blockLevel" value="node"
+                          checked="${instance.blockLevel.value == 'node'}"/>
+            <!--blocks this build if any of the defined jobs is running on the same node this build is running on-->
         </f:section>
-        <f:section title="configure queue scaning">
-            <f:entry
-                    title="check queued builds" field="scanBuildableQueueItems"
-                    description="consider ready to run builds of the defined jobs for the blocking decision">
-                <f:checkbox/>
-            </f:entry>
-            <f:entry
-                    title="check all queued builds"
-                    description="consider all builds of the defined jobs for the blocking decision, including blocked, waiting, pending and buildable (overrides 'check queued builds')"
-                    field="scanAllQueueItemStates">
-                <f:checkbox/>
-            </f:entry>
+        <f:section title="configure queue scanning">
+            <!--consider ready to run builds of the defined jobs for the blocking decision-->
+            <f:radioBlock title="check buildable queued builds" name="scanQueueFor" value="buildable"
+                          checked="${instance.scanQueueFor.value == 'buildable'}"/>
+            <f:radioBlock title="check all queued builds" name="scanQueueFor" value="all"
+                          checked="${instance.scanQueueFor.value == 'all'}"/>
+            <f:radioBlock title="disable queue checking" name="scanQueueFor" value="disabled"
+                          checked="${empty instance.scanQueueFor or instance.scanQueueFor.value == 'disabled'}"/>
+            <!--consider all builds of the defined jobs for the blocking decision, including blocked, waiting, pending and buildable (overrides 'check queued builds')-->
         </f:section>
         <f:entry title="">
             <div align="right">
