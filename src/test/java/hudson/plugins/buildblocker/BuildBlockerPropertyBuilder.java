@@ -1,8 +1,5 @@
 package hudson.plugins.buildblocker;
 
-import hudson.plugins.buildblocker.BuildBlockerProperty.BlockLevel;
-import hudson.plugins.buildblocker.BuildBlockerProperty.QueueScanScope;
-
 public class BuildBlockerPropertyBuilder {
     private boolean useBuildBlocker = false;
     private String blockLevel = "";
@@ -44,6 +41,6 @@ public class BuildBlockerPropertyBuilder {
     }
 
     public BuildBlockerProperty createBuildBlockerProperty() {
-        return new BuildBlockerProperty(useBuildBlocker, new BlockLevel(blockLevel), new QueueScanScope(scanQueueFor), blockingJobs);
+        return new BuildBlockerProperty(useBuildBlocker, blockLevel, scanQueueFor, blockingJobs);
     }
 }

@@ -32,13 +32,11 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
     private AbstractProject project;
     private Queue.BuildableItem item;
 
-    private MonitorFactory monitorFactory;
     private BuildBlockerQueueTaskDispatcher dispatcher;
 
     @Before
     public void setup() throws IllegalAccessException {
-        monitorFactory = new FieldReturningMonitorFactory(monitor);
-        dispatcher = new BuildBlockerQueueTaskDispatcher(monitorFactory);
+        dispatcher = new BuildBlockerQueueTaskDispatcher(new FieldReturningMonitorFactory(monitor));
 
         project = PowerMockito.mock(AbstractProject.class);
         item = PowerMockito.mock(Queue.BuildableItem.class);

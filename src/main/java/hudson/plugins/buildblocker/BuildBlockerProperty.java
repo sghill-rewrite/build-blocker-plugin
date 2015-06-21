@@ -46,31 +46,12 @@ import static java.util.logging.Level.FINE;
  * regular expressions that define the blocking jobs.
  */
 public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
-    /**
-     * the logger
-     */
+
     private static final Logger LOG = Logger.getLogger(BuildBlockerProperty.class.getName());
 
-    /**
-     * the enable checkbox in the job's config
-     */
-    public static final String USE_BUILD_BLOCKER = "useBuildBlocker";
-
-    /**
-     * blocking jobs form field name
-     */
-    public static final String BLOCKING_JOBS_KEY = "blockingJobs";
-
-    /**
-     * flag if build blocker should be used
-     */
     private boolean useBuildBlocker;
-
     private BlockLevel blockLevel;
     private QueueScanScope scanQueueFor;
-    /**
-     * the job names that block the build if running
-     */
     private String blockingJobs;
 
     public BlockLevel getBlockLevel() {
@@ -81,55 +62,32 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         return scanQueueFor;
     }
 
-    /**
-     * Returns true if the build blocker is enabled.
-     *
-     * @return true if the build blocker is enabled
-     */
     public boolean isUseBuildBlocker() {
         return useBuildBlocker;
     }
 
-    /**
-     * Sets the build blocker flag.
-     *
-     * @param useBuildBlocker the build blocker flag
-     */
     public void setUseBuildBlocker(boolean useBuildBlocker) {
         this.useBuildBlocker = useBuildBlocker;
     }
 
 
-    /**
-     * Returns the text of the blocking jobs field.
-     *
-     * @return the text of the blocking jobs field
-     */
     public String getBlockingJobs() {
         return blockingJobs;
     }
 
-    /**
-     * Sets the blocking jobs field
-     *
-     * @param blockingJobs the blocking jobs entry
-     */
     public void setBlockingJobs(String blockingJobs) {
         this.blockingJobs = blockingJobs;
     }
 
     @DataBoundConstructor
-    public BuildBlockerProperty(boolean useBuildBlocker, BlockLevel blockLevel, QueueScanScope scanQueueFor, String blockingJobs) {
+    public BuildBlockerProperty(boolean useBuildBlocker, String blockLevel, String scanQueueFor, String blockingJobs) {
         LOG.logp(FINE, getClass().getName(), "BuildBlockerProperty", "useBuildBlocker: " + useBuildBlocker + " blockLevel: " + blockLevel + " scanQueueFor: " +
                 scanQueueFor + " blockingJobs: " + blockingJobs);
         this.useBuildBlocker = useBuildBlocker;
-        this.scanQueueFor = scanQueueFor;
-        this.blockLevel = blockLevel;
+        this.scanQueueFor = QueueScanScope.from(scanQueueFor);
+        this.blockLevel = BlockLevel.from(blockLevel);
         this.blockingJobs = blockingJobs;
     }
-
-//    public BuildBlockerProperty() {
-//    }
 
     /**
      * Descriptor
@@ -184,68 +142,49 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         }
     }
 
-    public static class BlockLevel {
-        private static final String GLOBAL = "global";
-        private static final String NODE = "node";
+    public enum BlockLevel {
+        GLOBAL, NODE, UNDEFINED;
 
-        //default is global
-        private String value = GLOBAL;
-
-        @DataBoundConstructor
-        public BlockLevel(String value) {
-            this.value = value;
+        public static BlockLevel from(String value) {
+            if (value == null) {
+                return UNDEFINED;
+            }
+            try {
+                return valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return UNDEFINED;
+            }
         }
 
         public boolean isGlobal() {
-            return value.equals(GLOBAL);
+            return this.equals(GLOBAL);
         }
 
         public boolean isNode() {
-            return value.equals(NODE);
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        @Override
-        public String toString() {
-            return "BlockLevel{" + "value='" + value + '\'' + '}';
+            return this.equals(NODE);
         }
     }
 
-    public static class QueueScanScope {
-        private static final String ALL = "all";
-        private static final String BUILDABLE = "buildable";
-        public static final String DISABLED = "disabled";
+    public enum QueueScanScope {
+        ALL, BUILDABLE, DISABLED;
 
-        //default is disabled
-        private String value = DISABLED;
-
-        @DataBoundConstructor
-        public QueueScanScope(String value) {
-            this.value = value;
+        public static QueueScanScope from(String value) {
+            if (value == null) {
+                return DISABLED;
+            }
+            try {
+                return valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return DISABLED;
+            }
         }
 
         public boolean isAll() {
-            return value.equals(ALL);
+            return this.equals(ALL);
         }
 
         public boolean isBuildable() {
-            return value.equals(BUILDABLE);
-        }
-
-        public boolean isDisabled() {
-            return !isAll() && !isBuildable();
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        @Override
-        public String toString() {
-            return "QueueScanScope{" + "value='" + value + '\'' + '}';
+            return this.equals(BUILDABLE);
         }
     }
 
