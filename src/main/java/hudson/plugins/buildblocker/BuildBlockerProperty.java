@@ -66,17 +66,8 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         return useBuildBlocker;
     }
 
-    public void setUseBuildBlocker(boolean useBuildBlocker) {
-        this.useBuildBlocker = useBuildBlocker;
-    }
-
-
     public String getBlockingJobs() {
         return blockingJobs;
-    }
-
-    public void setBlockingJobs(String blockingJobs) {
-        this.blockingJobs = blockingJobs;
     }
 
     @DataBoundConstructor
@@ -107,7 +98,7 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
 
 
         /**
-         * Chcek the regular expression entered by the user
+         * Check the regular expression entered by the user
          */
         public FormValidation doCheckRegex(@QueryParameter final String blockingJobs) {
             List<String> listJobs = null;

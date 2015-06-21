@@ -6,29 +6,29 @@ public class BuildBlockerPropertyBuilder {
     private String scanQueueFor = "";
     private String blockingJobs = "";
 
-    public BuildBlockerPropertyBuilder setUseBuildBlocker(boolean useBuildBlocker) {
-        this.useBuildBlocker = useBuildBlocker;
+    public BuildBlockerPropertyBuilder setUseBuildBlocker() {
+        this.useBuildBlocker = true;
         return this;
     }
 
-    public BuildBlockerPropertyBuilder setBlockOnNodeLevel(boolean blockOnNodeLevel) {
+    public BuildBlockerPropertyBuilder setBlockOnNodeLevel() {
         if (!blockLevel.equals("global")) {
             this.blockLevel = "node";
         }
         return this;
     }
 
-    public BuildBlockerPropertyBuilder setBlockOnGlobalLevel(boolean blockOnGlobalLevel) {
+    public BuildBlockerPropertyBuilder setBlockOnGlobalLevel() {
         this.blockLevel = "global";
         return this;
     }
 
-    public BuildBlockerPropertyBuilder setScanAllQueueItemStates(boolean scanAllQueueItemStates) {
+    public BuildBlockerPropertyBuilder setScanAllQueueItemStates() {
         this.scanQueueFor = "all";
         return this;
     }
 
-    public BuildBlockerPropertyBuilder setScanBuildableQueueItemStates(boolean scanBuildableQueueItemStates) {
+    public BuildBlockerPropertyBuilder setScanBuildableQueueItemStates() {
         if (!scanQueueFor.equals("all")) {
             this.scanQueueFor = "buildable";
         }

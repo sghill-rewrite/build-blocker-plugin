@@ -25,14 +25,7 @@
 package hudson.plugins.buildblocker;
 
 import hudson.model.Job;
-import net.sf.json.JSONObject;
-import org.easymock.EasyMock;
-import org.junit.Ignore;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.kohsuke.stapler.StaplerRequest;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Unit tests
@@ -48,45 +41,5 @@ public class BuildBlockerPropertyTest extends HudsonTestCase {
         BuildBlockerProperty property = new BuildBlockerPropertyBuilder().createBuildBlockerProperty();
 
         assertTrue(property.getDescriptor().isApplicable(Job.class));
-    }
-
-    /**
-     * Use different form data to test descriptor newInstance
-     *
-     * @throws Exception
-     */
-    @Ignore("dont override newInstance...")
-    public void _testDescriptorNewInstance() throws Exception {
-        JSONObject formData = new JSONObject();
-        StaplerRequest staplerRequest = EasyMock.createNiceMock(StaplerRequest.class);
-
-        BuildBlockerProperty property = new BuildBlockerPropertyBuilder().createBuildBlockerProperty();
-        property = (BuildBlockerProperty) property.getDescriptor().newInstance(staplerRequest, formData);
-        assertNull(property.getBlockingJobs());
-
-        Map<String, Map<String, String>> formDataMap = new HashMap<String, Map<String, String>>();
-        Map<String, String> subMap = new HashMap<String, String>();
-
-        formDataMap.put("useBuildBlocker", subMap);
-        formData.accumulateAll(formDataMap);
-
-        property = (BuildBlockerProperty) property.getDescriptor().newInstance(staplerRequest, formData);
-        assertFalse(property.isUseBuildBlocker());
-        assertNull(property.getBlockingJobs());
-
-        // json data in request: "{\"useBuildBlocker\":{\"blockingJobs\":\".*ocki.*\"}}"
-        String key = "blockingJobs";
-        String value = ".*ocki.*";
-
-        subMap.put(key, value);
-        formDataMap.put("useBuildBlocker", subMap);
-
-        formData = new JSONObject();
-        formData.accumulateAll(formDataMap);
-
-        property = (BuildBlockerProperty) property.getDescriptor().newInstance(staplerRequest, formData);
-        assertTrue(property.isUseBuildBlocker());
-        assertNotNull(property.getBlockingJobs());
-        assertEquals(value, property.getBlockingJobs());
     }
 }

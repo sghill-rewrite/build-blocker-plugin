@@ -61,7 +61,7 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
+                                .setUseBuildBlocker()
                                 .createBuildBlockerProperty());
 
         dispatcher.canRun(item);
@@ -74,8 +74,8 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -90,9 +90,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -108,9 +108,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setScanAllQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setScanAllQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -126,10 +126,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setScanAllQueueItemStates(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setScanAllQueueItemStates()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -145,8 +145,8 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -160,9 +160,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -176,9 +176,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanAllQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
+                                .setScanAllQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -192,10 +192,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanAllQueueItemStates(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
+                                .setScanAllQueueItemStates()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -209,9 +209,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setBlockOnNodeLevel(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setBlockOnNodeLevel()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -226,10 +226,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanAllQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setBlockOnNodeLevel()
+                                .setScanAllQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -245,10 +245,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setBlockOnNodeLevel()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -264,11 +264,11 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanAllQueueItemStates(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setBlockOnNodeLevel()
+                                .setScanAllQueueItemStates()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -297,7 +297,7 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
+                                .setUseBuildBlocker()
                                 .createBuildBlockerProperty());
 
         dispatcher.canTake(node, item);
@@ -310,8 +310,8 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -325,9 +325,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setScanAllQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setScanAllQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -341,9 +341,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -357,10 +357,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setScanBuildableQueueItemStates(true)
-                                .setScanAllQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setScanBuildableQueueItemStates()
+                                .setScanAllQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -374,8 +374,8 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -390,9 +390,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -408,9 +408,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanAllQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
+                                .setScanAllQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -426,10 +426,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnNodeLevel(true)
-                                .setScanAllQueueItemStates(true)
-                                .setScanBuildableQueueItemStates(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnNodeLevel()
+                                .setScanAllQueueItemStates()
+                                .setScanBuildableQueueItemStates()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -445,9 +445,9 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(
                         new BuildBlockerPropertyBuilder()
-                                .setUseBuildBlocker(true)
-                                .setBlockOnGlobalLevel(true)
-                                .setBlockOnNodeLevel(true)
+                                .setUseBuildBlocker()
+                                .setBlockOnGlobalLevel()
+                                .setBlockOnNodeLevel()
                                 .setBlockingJobs("someJob")
                                 .createBuildBlockerProperty());
 
@@ -460,10 +460,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
     public void testCanTakeWithGlobalEnabledAndNodeEnabledAndCheckAllEnabledCallsCorrectMethods() {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(new BuildBlockerPropertyBuilder()
-                        .setUseBuildBlocker(true)
-                        .setBlockOnGlobalLevel(true)
-                        .setBlockOnNodeLevel(true)
-                        .setScanAllQueueItemStates(true)
+                        .setUseBuildBlocker()
+                        .setBlockOnGlobalLevel()
+                        .setBlockOnNodeLevel()
+                        .setScanAllQueueItemStates()
                         .setBlockingJobs("someJob")
                         .createBuildBlockerProperty());
 
@@ -476,10 +476,10 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
     public void testCanTakeWithGlobalEnabledAndNodeEnabledAndCheckBuildableEnabledCallsCorrectMethods() {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(new BuildBlockerPropertyBuilder()
-                        .setUseBuildBlocker(true)
-                        .setBlockOnGlobalLevel(true)
-                        .setBlockOnNodeLevel(true)
-                        .setScanBuildableQueueItemStates(true)
+                        .setUseBuildBlocker()
+                        .setBlockOnGlobalLevel()
+                        .setBlockOnNodeLevel()
+                        .setScanBuildableQueueItemStates()
                         .setBlockingJobs("someJob")
                         .createBuildBlockerProperty());
 
@@ -492,11 +492,11 @@ public class BuildBlockerQueueTaskDispatcherUnitTest {
     public void testCanTakeWithGlobalEnabledAndNodeEnabledAndCheckBuildableEnabledAndCheckAllEnabledCallsCorrectMethods() {
         when(project.getProperty(eq(BuildBlockerProperty.class)))
                 .thenReturn(new BuildBlockerPropertyBuilder()
-                        .setUseBuildBlocker(true)
-                        .setBlockOnGlobalLevel(true)
-                        .setBlockOnNodeLevel(true)
-                        .setScanBuildableQueueItemStates(true)
-                        .setScanAllQueueItemStates(true)
+                        .setUseBuildBlocker()
+                        .setBlockOnGlobalLevel()
+                        .setBlockOnNodeLevel()
+                        .setScanBuildableQueueItemStates()
+                        .setScanAllQueueItemStates()
                         .setBlockingJobs("someJob")
                         .createBuildBlockerProperty());
 

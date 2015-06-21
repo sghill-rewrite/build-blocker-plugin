@@ -358,7 +358,7 @@ public class BlockingJobsMonitorUnitTests {
     public void testCheckForQueueEntriesReturnsNullForNonBlockingItems() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingWaitingItem, nonBlockingBuildableItem, nonBlockingBlockedItem});
 
-        assertThat((Project) monitor.checkForQueueEntries(Mockito.mock(BuildableItem.class)), is(nullValue()));
+        assertThat(monitor.checkForQueueEntries(Mockito.mock(BuildableItem.class)), is(nullValue()));
 
         //verify that the different project was actually checked (three items are checked for two job names each)
         verify(nonBlockingProject, times(6)).getFullName();

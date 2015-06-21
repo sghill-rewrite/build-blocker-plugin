@@ -91,8 +91,8 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
         BuildBlockerProperty property = new BuildBlockerPropertyBuilder()
                 .setBlockingJobs(".*ocki.*")
-                .setUseBuildBlocker(true)
-                .setBlockOnGlobalLevel(true)
+                .setUseBuildBlocker()
+                .setBlockOnGlobalLevel()
                 .createBuildBlockerProperty();
 
         project.addProperty(property);
@@ -119,9 +119,9 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
         {
             BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder()
                     .setBlockingJobs("MultipleExecutor_Job1")
-                    .setUseBuildBlocker(true)
-                    .setBlockOnGlobalLevel(true)
-                    .setScanBuildableQueueItemStates(true)
+                    .setUseBuildBlocker()
+                    .setBlockOnGlobalLevel()
+                    .setScanBuildableQueueItemStates()
                     .createBuildBlockerProperty();
             theJob2.addProperty(theProperty);
         }
@@ -152,9 +152,9 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
         BuildBlockerProperty theProperty = new BuildBlockerPropertyBuilder()
                 .setBlockingJobs("SelfExcluding_.*")
-                .setUseBuildBlocker(true)
-                .setBlockOnGlobalLevel(true)
-                .setScanBuildableQueueItemStates(true)
+                .setUseBuildBlocker()
+                .setBlockOnGlobalLevel()
+                .setScanBuildableQueueItemStates()
                 .createBuildBlockerProperty();
 
         FreeStyleProject theJob1 = createFreeStyleProject("SelfExcluding_Job1");
