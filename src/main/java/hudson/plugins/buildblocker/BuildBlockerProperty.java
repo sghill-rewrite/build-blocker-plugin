@@ -186,6 +186,10 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
         public boolean isBuildable() {
             return this.equals(BUILDABLE);
         }
+
+        public boolean isDisabled() {
+            return this.equals(DISABLED);
+        }
     }
 
 }
