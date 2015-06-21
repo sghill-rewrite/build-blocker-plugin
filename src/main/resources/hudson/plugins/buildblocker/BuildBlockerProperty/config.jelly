@@ -47,7 +47,7 @@
             </f:entry>
             <f:entry
                     description="${%description_all}">
-                <f:radio title="${title_all}" name="scanQueueFor" value="all"
+                <f:radio title="${%title_all}" name="scanQueueFor" value="all"
                          checked="${instance.scanQueueFor.all}"/>
             </f:entry>
             <f:entry>

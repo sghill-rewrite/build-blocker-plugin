@@ -93,7 +93,7 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
          */
         @Override
         public String getDisplayName() {
-            return Messages.DisplayName();
+            return Messages.Description();
         }
 
 
