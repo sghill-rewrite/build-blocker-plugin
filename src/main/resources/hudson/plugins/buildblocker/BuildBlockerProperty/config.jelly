@@ -23,7 +23,7 @@
 -->
 
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:optionalBlock name="useBuildBlocker" title="${%Blocks a build if one of the given jobs is running.}"
+    <f:optionalBlock name="useBuildBlocker" title="${%Block build if certain jobs are running}"
                      checked="${instance.useBuildBlocker}" inline="true"
                      help="/plugin/build-blocker-plugin/help-usageBuildBlocker.html">
         <f:entry title="${%Blocking Jobs}" field="blockingJobs">

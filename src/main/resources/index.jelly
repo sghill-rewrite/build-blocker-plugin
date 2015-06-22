@@ -28,20 +28,6 @@
 <div>
     This plugin blocks a build if one of the given jobs is running.
 
-    The blocking behaviour can be configured to either block builds
-    <ul>
-        <li>from running on the same node</li>
-        <li>from running at all</li>
-    </ul>
-    Additionally, the blocking behaviour can be configured to consider planned, but not yet running builds in the
-    decision to block a build.
-    Either
-    <ul>
-        <li>buildable builds can stop another build from running (for instance builds that are waiting for an available
-            executor)
-        </li>
-        <li>all planned builds can stop another build from running (blocked builds, pending builds waiting builds and
-            buildable builds)
-        </li>
-    </ul>
+    The blocking behaviour can be configured to block builds on node or global level and to scan the queue and block if
+    blocking jobs are about to run.
 </div>
