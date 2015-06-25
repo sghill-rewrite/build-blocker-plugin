@@ -42,7 +42,7 @@ import static org.powermock.api.support.membermodification.MemberMatcher.field;
 
 @PrepareForTest({Jenkins.class, BuildableItem.class, Queue.BlockedItem.class, Queue.WaitingItem.class, Project.class, WorkUnit.class})
 @RunWith(PowerMockRunner.class)
-public class BlockingJobsMonitorUnitTests {
+public class BlockingJobsMonitorUnitTest {
 
     @Mock
     private Node node;
