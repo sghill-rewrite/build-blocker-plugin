@@ -93,7 +93,7 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
         super.tearDown();
     }
 
-    public void testConstructor() throws Exception {
+    public void testNullMonitorDoesNotBlock() throws Exception {
 
 
         BlockingJobsMonitor blockingJobsMonitorUsingNull = new BlockingJobsMonitor(null);
@@ -102,14 +102,14 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
 
     }
 
-    public void test2() {
+    public void testNonMatchingMonitorDoesNotBlock() {
         BlockingJobsMonitor blockingJobsMonitorNotMatching = new BlockingJobsMonitor("xxx");
         assertNull(blockingJobsMonitorNotMatching.checkAllNodesForRunningBuilds());
         assertNull(blockingJobsMonitorNotMatching.checkForBuildableQueueEntries(null));
 
     }
 
-    public void test3() {
+    public void testMatchingMonitorReturnsBlockingJobsDisplayName() {
         BlockingJobsMonitor blockingJobsMonitorUsingFullName = new BlockingJobsMonitor(blockingJobName);
         assertEquals(blockingJobName, blockingJobsMonitorUsingFullName.checkAllNodesForRunningBuilds().getDisplayName
                 ());
@@ -117,13 +117,13 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
 
     }
 
-    public void test4() {
+    public void testMonitorBlocksBasedOnRegEx() {
         BlockingJobsMonitor blockingJobsMonitorUsingRegex = new BlockingJobsMonitor("block.*");
         assertEquals(blockingJobName, blockingJobsMonitorUsingRegex.checkAllNodesForRunningBuilds().getDisplayName());
         assertNull(blockingJobsMonitorUsingRegex.checkForBuildableQueueEntries(null));
     }
 
-    public void test5() {
+    public void testMonitorBlocksIfConfiguredWithSeveralProjectnames() {
         BlockingJobsMonitor blockingJobsMonitorUsingMoreLines = new BlockingJobsMonitor("xxx\nblock.*\nyyy");
         assertEquals(blockingJobName, blockingJobsMonitorUsingMoreLines.checkAllNodesForRunningBuilds()
                 .getDisplayName());
@@ -131,7 +131,7 @@ public class BlockingJobsMonitorTest extends HudsonTestCase {
 
     }
 
-    public void test6() {
+    public void testMonitorDoesNotBlockIfRegexDoesNotMatch() {
         BlockingJobsMonitor blockingJobsMonitorUsingWrongRegex = new BlockingJobsMonitor("*BW2S.*QRT.");
         assertNull(blockingJobsMonitorUsingWrongRegex.checkAllNodesForRunningBuilds());
         assertNull(blockingJobsMonitorUsingWrongRegex.checkForBuildableQueueEntries(null));

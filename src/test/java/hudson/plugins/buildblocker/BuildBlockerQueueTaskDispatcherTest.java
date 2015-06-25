@@ -46,6 +46,8 @@ import java.util.Calendar;
 import java.util.concurrent.Future;
 
 import static hudson.model.Hudson.getInstance;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -163,7 +165,7 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
 
         FreeStyleProject theJob2 = createFreeStyleProject("SelfExcluding_Job2");
         theJob2.addProperty(theProperty);
-        assertTrue(theJob1.getBuilds().isEmpty());
+        assertTrue(theJob2.getBuilds().isEmpty());
 
         // allow executing two simultanious jobs
         int theOldNumExecutors = getInstance().getNumExecutors();
@@ -181,10 +183,11 @@ public class BuildBlockerQueueTaskDispatcherTest extends HudsonTestCase {
                 for (Executor executor : computor.getExecutors()) {
                     if (executor.isBusy()) {
                         countBusy++;
+                        //the two jobs dont run in parallel
+                        assertThat(countBusy, is(lessThanOrEqualTo(1)));
                     }
                 }
             }
-            assertThat(countBusy, org.hamcrest.Matchers.lessThanOrEqualTo(1));
             theEndTime = System.currentTimeMillis();
         }
 
