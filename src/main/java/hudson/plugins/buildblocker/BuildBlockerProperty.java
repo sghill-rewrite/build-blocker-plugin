@@ -28,98 +28,67 @@ import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
 import hudson.util.FormValidation;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.StringUtils;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+import static java.util.logging.Level.FINE;
 
 /**
  * Job property that stores the line feed separated list of
  * regular expressions that define the blocking jobs.
  */
 public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
-    /**
-     * the logger
-     */
+
     private static final Logger LOG = Logger.getLogger(BuildBlockerProperty.class.getName());
 
-    /**
-     * the enable checkbox in the job's config
-     */
-    public static final String USE_BUILD_BLOCKER = "useBuildBlocker";
-
-    /**
-     * blocking jobs form field name
-     */
-    public static final String BLOCKING_JOBS_KEY = "blockingJobs";
-
-    /**
-     * flag if build blocker should be used
-     */
     private boolean useBuildBlocker;
-
-    /**
-     * the job names that block the build if running
-     */
+    private BlockLevel blockLevel;
+    private QueueScanScope scanQueueFor;
     private String blockingJobs;
 
-    /**
-     * Returns true if the build blocker is enabled.
-     * @return true if the build blocker is enabled
-     */
-    @SuppressWarnings("unused")
+    public BlockLevel getBlockLevel() {
+        return blockLevel;
+    }
+
+    public QueueScanScope getScanQueueFor() {
+        return scanQueueFor;
+    }
+
     public boolean isUseBuildBlocker() {
         return useBuildBlocker;
     }
 
-    /**
-     * Sets the build blocker flag.
-     * @param useBuildBlocker the build blocker flag
-     */
-    public void setUseBuildBlocker(boolean useBuildBlocker) {
-        this.useBuildBlocker = useBuildBlocker;
-    }
-
-    /**
-     * Returns the text of the blocking jobs field.
-     * @return the text of the blocking jobs field
-     */
     public String getBlockingJobs() {
         return blockingJobs;
     }
 
-    /**
-     * Sets the blocking jobs field
-     * @param blockingJobs the blocking jobs entry
-     */
-    public void setBlockingJobs(String blockingJobs) {
+    @DataBoundConstructor
+    public BuildBlockerProperty(boolean useBuildBlocker, String blockLevel, String scanQueueFor, String blockingJobs) {
+        LOG.logp(FINE, getClass().getName(), "BuildBlockerProperty", "useBuildBlocker: " + useBuildBlocker + " blockLevel: " + blockLevel + " scanQueueFor: " +
+                scanQueueFor + " blockingJobs: " + blockingJobs);
+        this.useBuildBlocker = useBuildBlocker;
+        this.scanQueueFor = QueueScanScope.from(scanQueueFor);
+        this.blockLevel = BlockLevel.from(blockLevel);
         this.blockingJobs = blockingJobs;
     }
 
     /**
      * Descriptor
      */
-    @SuppressWarnings("unused")
     @Extension
     public static final class BuildBlockerDescriptor extends JobPropertyDescriptor {
 
         /**
-         * Constructor loading the data from the config file
-         */
-        public BuildBlockerDescriptor() {
-            load();
-        }
-
-        /**
          * Returns the name to be shown on the website
+         *
          * @return the name to be shown on the website.
          */
         @Override
@@ -127,64 +96,90 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
             return Messages.DisplayName();
         }
 
+
         /**
-         * Returns a new instance of the build blocker property
-         * when job config page is saved.
-         * @param req stapler request
-         * @param formData  the form data
-         * @return a new instance of the build blocker property
-         * @throws FormException
+         * Check the regular expression entered by the user
          */
-        @Override
-        public BuildBlockerProperty newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            BuildBlockerProperty buildBlockerProperty = new BuildBlockerProperty();
-
-            if(formData.containsKey(USE_BUILD_BLOCKER)) {
-                try {
-                    buildBlockerProperty.setUseBuildBlocker(true);
-                    buildBlockerProperty.setBlockingJobs(formData.getJSONObject(USE_BUILD_BLOCKER).getString(BLOCKING_JOBS_KEY));
-
-                } catch(JSONException e) {
-                    buildBlockerProperty.setUseBuildBlocker(false);
-                    LOG.log(Level.WARNING, "could not get blocking jobs from " + formData.toString());
-                }
-            }
-
-            return buildBlockerProperty;
-        }
-
-        /**
-        * Chcek the regular expression entered by the user
-        */
         public FormValidation doCheckRegex(@QueryParameter final String blockingJobs) {
             List<String> listJobs = null;
-            if(StringUtils.isNotBlank(blockingJobs)) {
-              listJobs = Arrays.asList(blockingJobs.split("\n"));
+            if (StringUtils.isNotBlank(blockingJobs)) {
+                listJobs = Arrays.asList(blockingJobs.split("\n"));
             }
-            if (listJobs!=null) {
-              for (String blockingJob : listJobs) {
-                try {
-                    Pattern.compile(blockingJob);
-                } catch (PatternSyntaxException pse) {
-                    return FormValidation.error("Invalid regular expression [" +
-                                                blockingJob + "] exception: " +
-                                                pse.getDescription());
+            if (listJobs != null) {
+                for (String blockingJob : listJobs) {
+                    try {
+                        Pattern.compile(blockingJob);
+                    } catch (PatternSyntaxException pse) {
+                        return FormValidation.error("Invalid regular expression [" +
+                                blockingJob + "] exception: " +
+                                pse.getDescription());
+                    }
                 }
-              }
-              return FormValidation.ok();
-            }else{
-              return FormValidation.ok();
+                return FormValidation.ok();
+            } else {
+                return FormValidation.ok();
             }
         }
 
         /**
-         * Returns always true a it can be used in all types of jobs.
+         * Returns always true as it can be used in all types of jobs.
+         *
          * @param jobType the job type to be checked if this property is applicable.
          * @return true
          */
         @Override
         public boolean isApplicable(Class<? extends Job> jobType) {
             return true;
+        }
+    }
+
+    public enum BlockLevel {
+        GLOBAL, NODE, UNDEFINED;
+
+        public static BlockLevel from(String value) {
+            if (value == null) {
+                return UNDEFINED;
+            }
+            try {
+                return valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return UNDEFINED;
+            }
+        }
+
+        public boolean isGlobal() {
+            return this.equals(GLOBAL);
+        }
+
+        public boolean isNode() {
+            return this.equals(NODE);
+        }
+    }
+
+    public enum QueueScanScope {
+        ALL, BUILDABLE, DISABLED;
+
+        public static QueueScanScope from(String value) {
+            if (value == null) {
+                return DISABLED;
+            }
+            try {
+                return valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return DISABLED;
+            }
+        }
+
+        public boolean isAll() {
+            return this.equals(ALL);
+        }
+
+        public boolean isBuildable() {
+            return this.equals(BUILDABLE);
+        }
+
+        public boolean isDisabled() {
+            return this.equals(DISABLED);
         }
     }
 

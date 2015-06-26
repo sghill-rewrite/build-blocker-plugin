@@ -27,10 +27,15 @@ package hudson.plugins.buildblocker;
 import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.AbstractProject;
+import hudson.model.Node;
 import hudson.model.Queue;
 import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.model.queue.SubTask;
+
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.FINE;
 
 /**
  * Queue task dispatcher that evaluates the given blocking jobs in the config of the
@@ -39,15 +44,31 @@ import hudson.model.queue.SubTask;
 @Extension
 public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
 
+    private static final Logger LOG = Logger.getLogger(BuildBlockerQueueTaskDispatcher.class.getName());
+
+    private MonitorFactory monitorFactory;
+
+    public BuildBlockerQueueTaskDispatcher() {
+        monitorFactory = new DefaultMonitorFactory();
+    }
+
+    //default scope for testability
+    BuildBlockerQueueTaskDispatcher(MonitorFactory monitorFactory) {
+        this.monitorFactory = monitorFactory;
+    }
+
     /**
-     * Called whenever {@link hudson.model.Queue} is considering if {@link hudson.model.Queue.Item} is ready to execute immediately
+     * Called whenever {@link hudson.model.Queue} is considering if {@link hudson.model.Queue.Item} is ready to
+     * execute immediately
      * (which doesn't necessarily mean that it gets executed right away &mdash; it's still subject to
      * executor availability), or if it should be considered blocked.
      * <p/>
      * <p/>
-     * Compared to {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, this version tells Jenkins that the task is
+     * Compared to {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, this version tells Jenkins
+     * that the task is
      * simply not ready to execute, even if there's available executor. This is more efficient
-     * than {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, and it sends the right signal to Jenkins so that
+     * than {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, and it sends the right signal to
+     * Jenkins so that
      * it won't use {@link hudson.slaves.Cloud} to try to provision new executors.
      * <p/>
      * <p/>
@@ -62,33 +83,121 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
      * to be re-evaluated earlier, call {@link hudson.model.Queue#scheduleMaintenance()} to initiate that process.
      *
      * @return null to indicate that the item is ready to proceed to the buildable state as far as this
-     *         {@link hudson.model.queue.QueueTaskDispatcher} is concerned. Otherwise return an object that indicates why
-     *         the build is blocked.
+     * {@link hudson.model.queue.QueueTaskDispatcher} is concerned. Otherwise return an object that indicates why
+     * the build is blocked.
      * @since 1.427
      */
     @Override
-    @SuppressWarnings("unchecked")
     public CauseOfBlockage canRun(Queue.Item item) {
-        if(item.task instanceof AbstractProject) {
-            AbstractProject project = (AbstractProject) item.task;
+        if (item.task instanceof AbstractProject) {
+            BuildBlockerProperty property = getBuildBlockerProperty(item);
 
-            BuildBlockerProperty property = (BuildBlockerProperty) project.getProperty(BuildBlockerProperty.class);
-
-            if(property != null) {
-                String blockingJobs = property.getBlockingJobs();
-
-                SubTask subTask = new BlockingJobsMonitor(blockingJobs).getBlockingJob(item);
-
-                if(subTask != null) {
-                    if(subTask instanceof MatrixConfiguration) {
-                        subTask = ((MatrixConfiguration) subTask).getParent();
-                    }
-
-                    return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), subTask.getDisplayName()));
+            if (property != null && property.isUseBuildBlocker()) {
+                CauseOfBlockage subTask = checkForBlock(item, property);
+                if (subTask != null) {
+                    return subTask;
                 }
             }
         }
 
         return super.canRun(item);
+    }
+
+    @Override
+    public CauseOfBlockage canTake(Node node, Queue.BuildableItem item) {
+        BuildBlockerProperty property = getBuildBlockerProperty(item);
+        if (property != null && property.isUseBuildBlocker()) {
+            CauseOfBlockage causeOfBlockage = checkForBlock(node, item, property);
+            if (causeOfBlockage != null) {
+                return causeOfBlockage;
+            }
+        }
+        return super.canTake(node, item);
+    }
+
+    private CauseOfBlockage checkForBlock(Queue.Item item, BuildBlockerProperty blockingJobs) {
+        return checkForBlock(null, item, blockingJobs);
+    }
+
+    private CauseOfBlockage checkForBlock(Node node, Queue.Item item, BuildBlockerProperty property) {
+        if (property.getBlockingJobs() == null) {
+            return null;
+        }
+
+        SubTask result = checkAccordingToProperties(node, item, property);
+
+
+        if (result != null) {
+            if (result instanceof MatrixConfiguration) {
+                result = ((MatrixConfiguration) result).getParent();
+            }
+
+            return CauseOfBlockage.fromMessage(Messages._BlockingJobIsRunning(item.getInQueueForString(), result.getDisplayName()));
+        }
+        return null;
+    }
+
+    private SubTask checkAccordingToProperties(Node node, Queue.Item item, BuildBlockerProperty properties) {
+        BlockingJobsMonitor jobsMonitor = monitorFactory.build(properties.getBlockingJobs());
+
+        if (checkWasCalledInGlobalContext(node) && properties.getBlockLevel().isGlobal()) {
+            LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkAllNodesForRunningBuilds");
+            SubTask checkAllNodesForRunningBuildsResult = jobsMonitor.checkAllNodesForRunningBuilds();
+            if (foundBlocker(checkAllNodesForRunningBuildsResult)) {
+                return checkAllNodesForRunningBuildsResult;
+            }
+            if (properties.getScanQueueFor().isAll()) {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkForQueueEntries");
+                SubTask checkForQueueEntriesResult = jobsMonitor.checkForQueueEntries(item);
+                if (foundBlocker(checkForQueueEntriesResult)) {
+                    return checkForQueueEntriesResult;
+                }
+            } else if (properties.getScanQueueFor().isBuildable()) {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkForBuildableQueueEntries");
+                SubTask checkForBuildableQueueEntriesResult = jobsMonitor.checkForBuildableQueueEntries(item);
+                if (foundBlocker(checkForBuildableQueueEntriesResult)) {
+                    return checkForBuildableQueueEntriesResult;
+                }
+            }
+        }
+        if (checkWasCalledInNodeContext(node) && properties.getBlockLevel().isNode() && !properties.getBlockLevel().isGlobal()) {
+            LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeForRunningBuilds");
+            SubTask checkNodeForRunningBuildsResult = jobsMonitor.checkNodeForRunningBuilds(node);
+            if (foundBlocker(checkNodeForRunningBuildsResult)) {
+                return checkNodeForRunningBuildsResult;
+            }
+            if (properties.getScanQueueFor().isAll()) {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeForQueueEntries");
+                SubTask checkNodeForQueueEntriesResult = jobsMonitor.checkNodeForQueueEntries(item, node);
+                if (foundBlocker(checkNodeForQueueEntriesResult)) {
+                    return checkNodeForQueueEntriesResult;
+                }
+            } else if (properties.getScanQueueFor().isBuildable()) {
+                LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeFOrBuildableQueueEntries");
+                SubTask checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item, node);
+                if (foundBlocker(checkNodeForBuildableQueueEntriesResult)) {
+                    return checkNodeForBuildableQueueEntriesResult;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean checkWasCalledInNodeContext(Node node) {
+        return node != null;
+    }
+
+    private boolean checkWasCalledInGlobalContext(Node node) {
+        return node == null;
+    }
+
+    private boolean foundBlocker(SubTask result) {
+        return result != null;
+    }
+
+    private BuildBlockerProperty getBuildBlockerProperty(Queue.Item item) {
+        AbstractProject project = (AbstractProject) item.task;
+
+        return (BuildBlockerProperty) project.getProperty(BuildBlockerProperty.class);
     }
 }
