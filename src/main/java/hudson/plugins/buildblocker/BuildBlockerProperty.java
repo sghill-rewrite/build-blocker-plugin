@@ -55,11 +55,11 @@ public class BuildBlockerProperty extends JobProperty<Job<?, ?>> {
     private String blockingJobs;
 
     public BlockLevel getBlockLevel() {
-        return blockLevel;
+        return blockLevel != null ? blockLevel : BlockLevel.UNDEFINED;
     }
 
     public QueueScanScope getScanQueueFor() {
-        return scanQueueFor;
+        return scanQueueFor != null ? scanQueueFor : QueueScanScope.DISABLED;
     }
 
     public boolean isUseBuildBlocker() {
