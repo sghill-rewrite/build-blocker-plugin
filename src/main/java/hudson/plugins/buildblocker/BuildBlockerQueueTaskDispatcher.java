@@ -105,11 +105,13 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
 
     @Override
     public CauseOfBlockage canTake(Node node, Queue.BuildableItem item) {
-        BuildBlockerProperty property = getBuildBlockerProperty(item);
-        if (property != null && property.isUseBuildBlocker()) {
-            CauseOfBlockage causeOfBlockage = checkForBlock(node, item, property);
-            if (causeOfBlockage != null) {
-                return causeOfBlockage;
+        if (item.task instanceof AbstractProject) {
+            BuildBlockerProperty property = getBuildBlockerProperty(item);
+            if (property != null && property.isUseBuildBlocker()) {
+                CauseOfBlockage causeOfBlockage = checkForBlock(node, item, property);
+                if (causeOfBlockage != null) {
+                    return causeOfBlockage;
+                }
             }
         }
         return super.canTake(node, item);
