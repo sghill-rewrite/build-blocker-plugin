@@ -202,8 +202,8 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
         if (!(item.task instanceof Job)) {
             return null;
         }
-        Job job = (Job) item.task;
+        Job<?,?> job = (Job<?,?>) item.task;
 
-        return (BuildBlockerProperty) job.getProperty(BuildBlockerProperty.class);
+        return job.getProperty(BuildBlockerProperty.class);
     }
 }
