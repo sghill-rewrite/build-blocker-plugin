@@ -27,12 +27,14 @@ package hudson.plugins.buildblocker;
 import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Queue;
 import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.model.queue.SubTask;
 
+import javax.annotation.CheckForNull;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.FINE;
@@ -195,9 +197,13 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
         return result != null;
     }
 
+    @CheckForNull
     private BuildBlockerProperty getBuildBlockerProperty(Queue.Item item) {
-        AbstractProject project = (AbstractProject) item.task;
+        if (!(item.task instanceof Job)) {
+            return null;
+        }
+        Job<?,?> job = (Job<?,?>) item.task;
 
-        return (BuildBlockerProperty) project.getProperty(BuildBlockerProperty.class);
+        return job.getProperty(BuildBlockerProperty.class);
     }
 }
