@@ -25,12 +25,11 @@
 package hudson.plugins.buildblocker;
 
 import hudson.matrix.MatrixConfiguration;
-import hudson.model.AbstractProject;
 import hudson.model.Computer;
 import hudson.model.Executor;
+import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Queue;
-import hudson.model.queue.SubTask;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
@@ -70,10 +69,10 @@ public class BlockingJobsMonitor {
         }
     }
 
-    public SubTask checkForBuildableQueueEntries(Queue.Item item) {
+    public Job checkForBuildableQueueEntries(Queue.Item item) {
         List<Queue.BuildableItem> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems();
 
-        SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
+        Job buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
             LOG.logp(FINE, getClass().getName(), "checkForBuildableQueueEntries", "build " + item + " blocked by queued build " + buildableItem);
             return buildableItem;
@@ -81,10 +80,10 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    public SubTask checkForQueueEntries(Queue.Item item) {
+    public Job checkForQueueEntries(Queue.Item item) {
         List<Queue.Item> buildableItems = asList(Jenkins.getInstance().getQueue().getItems());
 
-        SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
+        Job buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
             LOG.logp(FINE, getClass().getName(), "checkForQueueEntries", "build " + item + " blocked by queued " + "build " + buildableItem);
             return buildableItem;
@@ -92,10 +91,10 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    public SubTask checkNodeForBuildableQueueEntries(Queue.Item item, Node node) {
+    public Job checkNodeForBuildableQueueEntries(Queue.Item item, Node node) {
         List<? extends Queue.Item> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node.toComputer());
 
-        SubTask buildableItem = checkForPlannedBuilds(item, buildableItems);
+        Job buildableItem = checkForPlannedBuilds(item, buildableItems);
         if (buildableItem != null) {
             LOG.logp(FINE, getClass().getName(), "checkNodeForBuildableQueueEntries", "build " + item + " blocked by " + "queued build " + buildableItem);
             return buildableItem;
@@ -103,7 +102,7 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    public SubTask checkNodeForQueueEntries(Queue.Item item, Node node) {
+    public Job checkNodeForQueueEntries(Queue.Item item, Node node) {
         List<Queue.Item> buildableItemsOnNode = new ArrayList<Queue.Item>();
         for (Queue.Item buildableItem : Jenkins.getInstance().getQueue().getItems()) {
             if (buildableItem.getAssignedLabel().contains(node)) {
@@ -111,7 +110,7 @@ public class BlockingJobsMonitor {
             }
         }
 
-        SubTask buildableItem = checkForPlannedBuilds(item, buildableItemsOnNode);
+        Job buildableItem = checkForPlannedBuilds(item, buildableItemsOnNode);
         if (buildableItem != null) {
             LOG.logp(FINE, getClass().getName(), "checkNodeForQueueEntries", "build " + item + " blocked by queued build " +
                     buildableItem);
@@ -120,11 +119,11 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    public SubTask checkAllNodesForRunningBuilds() {
+    public Job checkAllNodesForRunningBuilds() {
         Computer[] computers = Jenkins.getInstance().getComputers();
 
         for (Computer computer : computers) {
-            SubTask task = checkComputerForRunningBuilds(computer);
+            Job task = checkComputerForRunningBuilds(computer);
             if (task != null) {
                 return task;
             }
@@ -132,13 +131,13 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    private SubTask checkComputerForRunningBuilds(Computer computer) {
+    private Job checkComputerForRunningBuilds(Computer computer) {
         List<Executor> executors = computer.getExecutors();
 
         executors.addAll(computer.getOneOffExecutors());
 
         for (Executor executor : executors) {
-            SubTask task = checkForRunningBuilds(executor);
+            Job task = checkForRunningBuilds(executor);
             if (task != null) {
                 LOG.logp(FINE, getClass().getName(), "checkComputerForRunningBuilds", "build blocked by running build " + task);
                 return task;
@@ -147,18 +146,18 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    public SubTask checkNodeForRunningBuilds(Node node) {
+    public Job checkNodeForRunningBuilds(Node node) {
         if (node == null) {
             return null;
         }
         return checkComputerForRunningBuilds(node.toComputer());
     }
 
-    private SubTask checkForPlannedBuilds(Queue.Item item, List<? extends Queue.Item> buildableItems) {
+    private Job checkForPlannedBuilds(Queue.Item item, List<? extends Queue.Item> buildableItems) {
         for (Queue.Item buildableItem : buildableItems) {
             if (item != buildableItem) {
                 for (String blockingJob : this.blockingJobs) {
-                    AbstractProject project = (AbstractProject) buildableItem.task;
+                    Job project = (Job) buildableItem.task;
                     if (project.getFullName().matches(blockingJob)) {
                         return project;
                     }
@@ -168,7 +167,7 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    private SubTask checkForRunningBuilds(Executor executor) {
+    private Job checkForRunningBuilds(Executor executor) {
         if (executor.isBusy()) {
             Queue.Task task = executor.getCurrentWorkUnit().work.getOwnerTask();
 
@@ -176,15 +175,16 @@ public class BlockingJobsMonitor {
                 task = ((MatrixConfiguration) task).getParent();
             }
 
-            AbstractProject project = (AbstractProject) task;
-
-            for (String blockingJob : this.blockingJobs) {
-                try {
-                    if (project.getFullName().matches(blockingJob)) {
-                        return task;
+            if (task instanceof Job) {
+                Job job = (Job) task;
+                for (String blockingJob : this.blockingJobs) {
+                    try {
+                        if (job.getFullName().matches(blockingJob)) {
+                            return job;
+                        }
+                    } catch (java.util.regex.PatternSyntaxException pse) {
+                        return null;
                     }
-                } catch (java.util.regex.PatternSyntaxException pse) {
-                    return null;
                 }
             }
         }
