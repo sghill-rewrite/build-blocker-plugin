@@ -24,6 +24,7 @@
 
 package hudson.plugins.buildblocker;
 
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.Job;
@@ -31,6 +32,7 @@ import hudson.model.Node;
 import hudson.model.Queue;
 import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
+import hudson.model.queue.SubTask;
 
 import javax.annotation.CheckForNull;
 import java.util.logging.Logger;
@@ -137,6 +139,7 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
         return null;
     }
 
+    @WithBridgeMethods(value=SubTask.class)
     private Job checkAccordingToProperties(Node node, Queue.Item item, BuildBlockerProperty properties) {
         BlockingJobsMonitor jobsMonitor = monitorFactory.build(properties.getBlockingJobs());
 
