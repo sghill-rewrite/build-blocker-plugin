@@ -24,14 +24,12 @@
 
 package hudson.plugins.buildblocker;
 
-import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.Computer;
 import hudson.model.Executor;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Queue;
-import hudson.model.queue.SubTask;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
@@ -71,7 +69,6 @@ public class BlockingJobsMonitor {
         }
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     public Job checkForBuildableQueueEntries(Queue.Item item) {
         List<Queue.BuildableItem> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems();
 
@@ -83,7 +80,6 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     public Job checkForQueueEntries(Queue.Item item) {
         List<Queue.Item> buildableItems = asList(Jenkins.getInstance().getQueue().getItems());
 
@@ -95,7 +91,6 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     public Job checkNodeForBuildableQueueEntries(Queue.Item item, Node node) {
         List<? extends Queue.Item> buildableItems = Jenkins.getInstance().getQueue().getBuildableItems(node.toComputer());
 
@@ -107,7 +102,6 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     public Job checkNodeForQueueEntries(Queue.Item item, Node node) {
         List<Queue.Item> buildableItemsOnNode = new ArrayList<Queue.Item>();
         for (Queue.Item buildableItem : Jenkins.getInstance().getQueue().getItems()) {
@@ -125,7 +119,6 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     public Job checkAllNodesForRunningBuilds() {
         Computer[] computers = Jenkins.getInstance().getComputers();
 
@@ -138,7 +131,6 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     private Job checkComputerForRunningBuilds(Computer computer) {
         List<Executor> executors = computer.getExecutors();
 
@@ -154,7 +146,6 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     public Job checkNodeForRunningBuilds(Node node) {
         if (node == null) {
             return null;
@@ -162,14 +153,15 @@ public class BlockingJobsMonitor {
         return checkComputerForRunningBuilds(node.toComputer());
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     private Job checkForPlannedBuilds(Queue.Item item, List<? extends Queue.Item> buildableItems) {
         for (Queue.Item buildableItem : buildableItems) {
             if (item != buildableItem) {
                 for (String blockingJob : this.blockingJobs) {
-                    Job project = (Job) buildableItem.task;
-                    if (project.getFullName().matches(blockingJob)) {
-                        return project;
+                    if (buildableItem.task instanceof Job) {
+                        Job project = (Job) buildableItem.task;
+                        if (project.getFullName().matches(blockingJob)) {
+                            return project;
+                        }
                     }
                 }
             }
@@ -177,7 +169,6 @@ public class BlockingJobsMonitor {
         return null;
     }
 
-    @WithBridgeMethods(value=SubTask.class)
     private Job checkForRunningBuilds(Executor executor) {
         if (executor.isBusy()) {
             Queue.Task task = executor.getCurrentWorkUnit().work.getOwnerTask();
