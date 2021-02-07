@@ -22,7 +22,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -85,8 +84,7 @@ public class BlockingJobsMonitorUnitTest {
     private BlockingJobsMonitor monitor;
 
     @Before
-    public void setup() throws IllegalAccessException, ClassNotFoundException, InvocationTargetException,
-            InstantiationException {
+    public void setup() throws IllegalAccessException {
         monitor = new BlockingJobsMonitor("blockingProject\nblockingMatrixProject");
 
         trainProjects();
@@ -207,13 +205,13 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForBuildableQueueEntriesReturnsNullForDifferentNode() {
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
-        Node differentNode = Mockito.mock(Node.class);
-        Computer differentComputer = Mockito.mock(Computer.class);
+        Node differentNode = PowerMockito.mock(Node.class);
+        Computer differentComputer = PowerMockito.mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
         when(queue.getBuildableItems(eq(differentComputer))).thenReturn(Collections.<BuildableItem>emptyList());
 
-        assertThat(monitor.checkNodeForBuildableQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
+        assertThat(monitor.checkNodeForBuildableQueueEntries(PowerMockito.mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
@@ -233,11 +231,11 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNode() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBuildableItem, buildableItemOnDifferentNode});
-        Node differentNode = Mockito.mock(Node.class);
-        Computer differentComputer = Mockito.mock(Computer.class);
+        Node differentNode = PowerMockito.mock(Node.class);
+        Computer differentComputer = PowerMockito.mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
 
-        assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
+        assertThat(monitor.checkNodeForQueueEntries(PowerMockito.mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
@@ -250,8 +248,8 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNodeCaseBlocked() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBlockedItem, blockedItemOnDifferentNode});
-        Node differentNode = Mockito.mock(Node.class);
-        Computer differentComputer = Mockito.mock(Computer.class);
+        Node differentNode = PowerMockito.mock(Node.class);
+        Computer differentComputer = PowerMockito.mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
 
         assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
@@ -267,8 +265,8 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNodeCaseWaiting() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingWaitingItem, waitingItemOnDifferentNode});
-        Node differentNode = Mockito.mock(Node.class);
-        Computer differentComputer = Mockito.mock(Computer.class);
+        Node differentNode = PowerMockito.mock(Node.class);
+        Computer differentComputer = PowerMockito.mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
 
         assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
