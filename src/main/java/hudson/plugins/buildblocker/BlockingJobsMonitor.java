@@ -42,8 +42,9 @@ import static java.util.logging.Level.FINE;
  * This class represents a monitor that checks all running jobs if
  * one of their names matches with one of the given blocking job's
  * regular expressions.
- * <p/>
+ * <p>
  * The first hit returns the blocking job's name.
+ * </p>
  */
 public class BlockingJobsMonitor {
 

@@ -58,30 +58,31 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
     }
 
     /**
+     * <p>
      * Called whenever {@link hudson.model.Queue} is considering if {@link hudson.model.Queue.Item} is ready to
      * execute immediately
      * (which doesn't necessarily mean that it gets executed right away &mdash; it's still subject to
      * executor availability), or if it should be considered blocked.
-     * <p/>
-     * <p/>
+     * </p>
+     * <p>
      * Compared to {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, this version tells Jenkins
      * that the task is
      * simply not ready to execute, even if there's available executor. This is more efficient
      * than {@link #canTake(hudson.model.Node, hudson.model.Queue.BuildableItem)}, and it sends the right signal to
      * Jenkins so that
      * it won't use {@link hudson.slaves.Cloud} to try to provision new executors.
-     * <p/>
-     * <p/>
+     * </p>
+     * <p>
      * Vetos are additive. When multiple {@link hudson.model.queue.QueueTaskDispatcher}s are in the system,
      * the task is considered blocked if any one of them returns a non-null value.
      * (This relationship is also the same with built-in check logic.)
-     * <p/>
-     * <p/>
+     * </p>
+     * <p>
      * If a {@link hudson.model.queue.QueueTaskDispatcher} returns non-null from this method, the task is placed into
      * the 'blocked' state, and generally speaking it stays in this state for a few seconds before
      * its state gets re-evaluated. If a {@link hudson.model.queue.QueueTaskDispatcher} wants the blockage condition
      * to be re-evaluated earlier, call {@link hudson.model.Queue#scheduleMaintenance()} to initiate that process.
-     *
+     * </p>
      * @return null to indicate that the item is ready to proceed to the buildable state as far as this
      * {@link hudson.model.queue.QueueTaskDispatcher} is concerned. Otherwise return an object that indicates why
      * the build is blocked.
