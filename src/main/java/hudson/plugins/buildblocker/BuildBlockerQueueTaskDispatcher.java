@@ -164,7 +164,9 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
         if (checkWasCalledInNodeContext(node) && properties.getBlockLevel().isNode() && !properties.getBlockLevel().isGlobal()) {
             LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeForRunningBuilds");
             Job checkNodeForRunningBuildsResult = jobsMonitor.checkNodeForRunningBuilds(node);
-
+            if (foundBlocker(checkNodeForRunningBuildsResult)) {
+                return checkNodeForRunningBuildsResult;
+            }
             if (properties.getScanQueueFor().isAll()) {
                 LOG.logp(FINE, getClass().getName(), "checkAccordingToProperties", "calling checkNodeForQueueEntries");
                 Job checkNodeForQueueEntriesResult = jobsMonitor.checkNodeForQueueEntries(item, node);
@@ -176,10 +178,6 @@ public class BuildBlockerQueueTaskDispatcher extends QueueTaskDispatcher {
                 Job checkNodeForBuildableQueueEntriesResult = jobsMonitor.checkNodeForBuildableQueueEntries(item, node);
                 if (foundBlocker(checkNodeForBuildableQueueEntriesResult)) {
                     return checkNodeForBuildableQueueEntriesResult;
-                }
-            } else {
-                if (foundBlocker(checkNodeForRunningBuildsResult)) {
-                    return checkNodeForRunningBuildsResult;
                 }
             }
         }
