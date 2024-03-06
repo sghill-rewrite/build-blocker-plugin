@@ -13,14 +13,16 @@ import hudson.model.Queue.BuildableItem;
 import hudson.model.queue.SubTask;
 import hudson.model.queue.WorkUnit;
 import jenkins.model.Jenkins;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
+import org.powermock.reflect.Whitebox;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,23 +33,24 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.support.membermodification.MemberMatcher.field;
+import static org.mockito.Mockito.withSettings;
 
-@PrepareForTest({Jenkins.class, BuildableItem.class, Queue.BlockedItem.class, Queue.WaitingItem.class, Project.class, WorkUnit.class})
-@RunWith(PowerMockRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class BlockingJobsMonitorUnitTest {
 
     @Mock
     private Node node;
     @Mock
     private Computer computer;
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     private Queue queue;
     @Mock
     private Executor idleExecutor;
@@ -59,7 +62,7 @@ public class BlockingJobsMonitorUnitTest {
     private OneOffExecutor oneOffExecutor;
     @Mock
     private Label blockingLabel;
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     private Label nonBlockingLabel;
     @Mock
     private SubTask subTask;
@@ -82,6 +85,7 @@ public class BlockingJobsMonitorUnitTest {
     private WorkUnit workUnit;
 
     private BlockingJobsMonitor monitor;
+    private MockedStatic<Jenkins> mockedJenkins;
 
     @Before
     public void setup() throws IllegalAccessException {
@@ -98,9 +102,16 @@ public class BlockingJobsMonitorUnitTest {
         trainExecutors();
     }
 
+    @After
+    public void tearDown() {
+        if (mockedJenkins != null) {
+            mockedJenkins.close();
+        }
+    }
+
     private void trainWorkUnit() throws IllegalAccessException {
-        workUnit = PowerMockito.mock(WorkUnit.class);
-        field(WorkUnit.class, "work").set(workUnit, subTask);
+        workUnit = mock(WorkUnit.class);
+        Whitebox.getField(WorkUnit.class, "work").set(workUnit, subTask);
     }
 
     private void trainLabels() {
@@ -109,36 +120,36 @@ public class BlockingJobsMonitorUnitTest {
     }
 
     private void trainWaitingItems() throws IllegalAccessException {
-        waitingItem = PowerMockito.mock(Queue.WaitingItem.class);
-        nonBlockingWaitingItem = PowerMockito.mock(Queue.WaitingItem.class);
-        waitingItemOnDifferentNode = PowerMockito.mock(Queue.WaitingItem.class);
-        field(Queue.BlockedItem.class, "task").set(waitingItem, project);
-        field(Queue.BlockedItem.class, "task").set(waitingItemOnDifferentNode, project);
-        field(Queue.BlockedItem.class, "task").set(nonBlockingWaitingItem, nonBlockingProject);
+        waitingItem = mock(Queue.WaitingItem.class);
+        nonBlockingWaitingItem = mock(Queue.WaitingItem.class);
+        waitingItemOnDifferentNode = mock(Queue.WaitingItem.class);
+        Whitebox.getField(Queue.BlockedItem.class, "task").set(waitingItem, project);
+        Whitebox.getField(Queue.BlockedItem.class, "task").set(waitingItemOnDifferentNode, project);
+        Whitebox.getField(Queue.BlockedItem.class, "task").set(nonBlockingWaitingItem, nonBlockingProject);
         when(waitingItem.getAssignedLabel()).thenReturn(blockingLabel);
         when(waitingItemOnDifferentNode.getAssignedLabel()).thenReturn(nonBlockingLabel);
         when(nonBlockingWaitingItem.getAssignedLabel()).thenReturn(blockingLabel);
     }
 
     private void trainBlockedItems() throws IllegalAccessException {
-        blockedItem = PowerMockito.mock(Queue.BlockedItem.class);
-        nonBlockingBlockedItem = PowerMockito.mock(Queue.BlockedItem.class);
-        blockedItemOnDifferentNode = PowerMockito.mock(Queue.BlockedItem.class);
-        field(Queue.BlockedItem.class, "task").set(blockedItem, project);
-        field(Queue.BlockedItem.class, "task").set(nonBlockingBlockedItem, nonBlockingProject);
-        field(Queue.BlockedItem.class, "task").set(blockedItemOnDifferentNode, project);
+        blockedItem = mock(Queue.BlockedItem.class);
+        nonBlockingBlockedItem = mock(Queue.BlockedItem.class);
+        blockedItemOnDifferentNode = mock(Queue.BlockedItem.class);
+        Whitebox.getField(Queue.BlockedItem.class, "task").set(blockedItem, project);
+        Whitebox.getField(Queue.BlockedItem.class, "task").set(nonBlockingBlockedItem, nonBlockingProject);
+        Whitebox.getField(Queue.BlockedItem.class, "task").set(blockedItemOnDifferentNode, project);
         when(blockedItem.getAssignedLabel()).thenReturn(blockingLabel);
         when(blockedItemOnDifferentNode.getAssignedLabel()).thenReturn(nonBlockingLabel);
         when(nonBlockingBlockedItem.getAssignedLabel()).thenReturn(blockingLabel);
     }
 
     private void trainBuildableItems() throws IllegalAccessException {
-        buildableItem = PowerMockito.mock(BuildableItem.class);
-        buildableItemOnDifferentNode = PowerMockito.mock(BuildableItem.class);
-        nonBlockingBuildableItem = PowerMockito.mock(BuildableItem.class);
-        field(BuildableItem.class, "task").set(buildableItem, project);
-        field(BuildableItem.class, "task").set(buildableItemOnDifferentNode, project);
-        field(BuildableItem.class, "task").set(nonBlockingBuildableItem, nonBlockingProject);
+        buildableItem = mock(BuildableItem.class);
+        buildableItemOnDifferentNode = mock(BuildableItem.class);
+        nonBlockingBuildableItem = mock(BuildableItem.class);
+        Whitebox.getField(BuildableItem.class, "task").set(buildableItem, project);
+        Whitebox.getField(BuildableItem.class, "task").set(buildableItemOnDifferentNode, project);
+        Whitebox.getField(BuildableItem.class, "task").set(nonBlockingBuildableItem, nonBlockingProject);
         when(buildableItem.getAssignedLabel()).thenReturn(blockingLabel);
         when(buildableItemOnDifferentNode.getAssignedLabel()).thenReturn(blockingLabel);
         when(nonBlockingBuildableItem.getAssignedLabel()).thenReturn(blockingLabel);
@@ -160,18 +171,18 @@ public class BlockingJobsMonitorUnitTest {
     }
 
     private void trainJenkins() {
-        PowerMockito.mockStatic(Jenkins.class);
-        Jenkins jenkins = PowerMockito.mock(Jenkins.class);
-        when(Jenkins.get()).thenReturn(jenkins);
+        Jenkins jenkins = mock(Jenkins.class);
         when(jenkins.getQueue()).thenReturn(queue);
         when(jenkins.getComputers()).thenReturn(new Computer[]{computer});
+        mockedJenkins = mockStatic(Jenkins.class);
+        mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
     }
 
     private void trainProjects() {
-        project = PowerMockito.mock(Project.class);
-        nonBlockingProject = PowerMockito.mock(Project.class);
-        matrixProject = PowerMockito.mock(MatrixProject.class);
-        nonBlockingMatrixProject = PowerMockito.mock(MatrixProject.class);
+        project = mock(Project.class);
+        nonBlockingProject = mock(Project.class);
+        matrixProject = mock(MatrixProject.class);
+        nonBlockingMatrixProject = mock(MatrixProject.class);
         when(project.getFullName()).thenReturn("blockingProject");
         when(nonBlockingProject.getFullName()).thenReturn("harmlessProject");
         when(matrixProject.getFullName()).thenReturn("blockingMatrixProject");
@@ -185,7 +196,7 @@ public class BlockingJobsMonitorUnitTest {
         assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
 
         //the do not selfblock condition is hit => no interactions with the project
-        verifyZeroInteractions(project);
+        verifyNoInteractions(project);
     }
 
     @Test
@@ -205,13 +216,13 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForBuildableQueueEntriesReturnsNullForDifferentNode() {
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
-        Node differentNode = PowerMockito.mock(Node.class);
-        Computer differentComputer = PowerMockito.mock(Computer.class);
+        Node differentNode = mock(Node.class);
+        Computer differentComputer = mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
         when(queue.getBuildableItems(eq(computer))).thenReturn(asList(nonBlockingBuildableItem, buildableItem));
         when(queue.getBuildableItems(eq(differentComputer))).thenReturn(Collections.<BuildableItem>emptyList());
 
-        assertThat(monitor.checkNodeForBuildableQueueEntries(PowerMockito.mock(BuildableItem.class), differentNode), is(nullValue()));
+        assertThat(monitor.checkNodeForBuildableQueueEntries(mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
@@ -231,11 +242,11 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNode() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBuildableItem, buildableItemOnDifferentNode});
-        Node differentNode = PowerMockito.mock(Node.class);
-        Computer differentComputer = PowerMockito.mock(Computer.class);
+        Node differentNode = mock(Node.class, withSettings().strictness(Strictness.LENIENT));
+        Computer differentComputer = mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
 
-        assertThat(monitor.checkNodeForQueueEntries(PowerMockito.mock(BuildableItem.class), differentNode), is(nullValue()));
+        assertThat(monitor.checkNodeForQueueEntries(mock(BuildableItem.class), differentNode), is(nullValue()));
     }
 
     @Test
@@ -248,8 +259,8 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNodeCaseBlocked() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingBlockedItem, blockedItemOnDifferentNode});
-        Node differentNode = PowerMockito.mock(Node.class);
-        Computer differentComputer = PowerMockito.mock(Computer.class);
+        Node differentNode = mock(Node.class, withSettings().strictness(Strictness.LENIENT));
+        Computer differentComputer = mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
 
         assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
@@ -265,8 +276,8 @@ public class BlockingJobsMonitorUnitTest {
     @Test
     public void testCheckNodeForQueueEntriesReturnsNullForDifferentNodeCaseWaiting() {
         when(queue.getItems()).thenReturn(new Queue.Item[]{nonBlockingWaitingItem, waitingItemOnDifferentNode});
-        Node differentNode = PowerMockito.mock(Node.class);
-        Computer differentComputer = PowerMockito.mock(Computer.class);
+        Node differentNode = mock(Node.class, withSettings().strictness(Strictness.LENIENT));
+        Computer differentComputer = mock(Computer.class);
         when(differentNode.toComputer()).thenReturn(differentComputer);
 
         assertThat(monitor.checkNodeForQueueEntries(Mockito.mock(BuildableItem.class), differentNode), is(nullValue()));
@@ -286,7 +297,7 @@ public class BlockingJobsMonitorUnitTest {
         assertThat(monitor.checkNodeForBuildableQueueEntries(buildableItem, node), is(nullValue()));
 
         //the do not selfblock condition is hit => no interactions with the project
-        verifyZeroInteractions(project);
+        verifyNoInteractions(project);
     }
 
     @Test
